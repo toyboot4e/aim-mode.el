@@ -59,20 +59,15 @@
 
 (aim-define-motion aim-forward-word-begin (count)
   "Move to the beginning of the COUNTth next word.
-In operator-pending State the motion stops at the end of the line
-instead of jumping to a following line, so `dw' on the last word of
-a line does not delete the newline (Vim's special case)."
-  (let ((start (point)))
-    (dotimes (_ count)
-      (cond ((looking-at-p (concat "[" aim--word-chars "]"))
-             (skip-chars-forward aim--word-chars))
-            ((not (looking-at-p "[ \t\n]"))
-             (skip-chars-forward (concat "^" aim--word-chars " \t\n"))))
-      (skip-chars-forward " \t\n"))
-    (when (and (eq aim-state 'operator-pending)
-               (bolp)
-               (> (point) start))
-      (backward-char))))
+Vim's `dw'-keeps-the-newline special case is not handled here: it
+falls out of the exclusive-motion adjustment rules in
+`aim--expand-range'."
+  (dotimes (_ count)
+    (cond ((looking-at-p (concat "[" aim--word-chars "]"))
+           (skip-chars-forward aim--word-chars))
+          ((not (looking-at-p "[ \t\n]"))
+           (skip-chars-forward (concat "^" aim--word-chars " \t\n"))))
+    (skip-chars-forward " \t\n")))
 
 (aim-define-motion aim-backward-word-begin (count)
   "Move to the beginning of the COUNTth previous word."

@@ -108,8 +108,16 @@
   (aim-test :initial "hello |world foo" :keys "dw" :expect "hello |foo"))
 
 (ert-deftest aim-op-delete-word-keeps-newline ()
-  "Vim's special case: dw on the last word stops at end of line."
+  "Exclusive rule 1: dw on the last word stops before the newline."
   (aim-test :initial "abc |def\nghi" :keys "dw" :expect "abc |\nghi"))
+
+(ert-deftest aim-op-delete-word-becomes-linewise ()
+  "Exclusive rule 2: dw from indentation over a whole line is linewise."
+  (aim-test :initial "  |def\nghi" :keys "dw" :expect "|ghi"))
+
+(ert-deftest aim-op-delete-word-at-eol-joins ()
+  "Degenerate rule 1: dw on the newline itself deletes it."
+  (aim-test :initial "abc|\ndef" :keys "dw" :expect "abc|def"))
 
 (ert-deftest aim-op-delete-word-end ()
   (aim-test :initial "|hello world" :keys "de" :expect "| world"))

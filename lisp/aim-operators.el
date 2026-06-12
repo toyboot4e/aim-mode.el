@@ -15,6 +15,7 @@
 (aim-define-operator aim-delete (beg end type)
   "Kill from BEG to END; linewise TYPE kills whole lines."
   (kill-region beg end)
+  (goto-char beg)
   (when (eq type 'linewise)
     (back-to-indentation)))
 
@@ -24,6 +25,7 @@ A linewise TYPE keeps an empty line to insert into.  The kill and
 the following insertion form a single undo step."
   (aim--start-undo-session)
   (kill-region beg end)
+  (goto-char beg)
   (when (eq type 'linewise)
     (insert "\n")
     (backward-char))

@@ -61,7 +61,13 @@ whole lines (like `dd')."
 (defun aim--expand-range (beg end type)
   "Expand the motion movement BEG..END into a range per TYPE.
 Return (BEG END TYPE) with BEG <= END; inclusive ranges cover the
-character at END, linewise ranges cover whole lines."
+character at END, linewise ranges cover whole lines.
+
+Exclusive ranges get Vim's two adjustment rules (:h exclusive-linewise):
+when the range ends at the beginning of a line below its start, the end
+backs up before that newline (so `dw' on a line's last word keeps the
+newline), and the range becomes linewise when the start also sits at or
+before the first non-blank of its line."
   (declare (ftype (function (integer integer symbol) list)))
   (let ((b (min beg end))
         (e (max beg end)))
@@ -70,7 +76,24 @@ character at END, linewise ranges cover whole lines."
       ('linewise (list (save-excursion (goto-char b) (line-beginning-position))
                        (save-excursion (goto-char e) (line-beginning-position 2))
                        'linewise))
-      (_ (list b e 'exclusive)))))
+      (_
+       (if (and (> e b)
+                (save-excursion (goto-char e) (bolp))
+                (> e (save-excursion (goto-char b) (line-end-position))))
+           ;; Rule 1: back up before the previous line's newline,
+           ;; unless that empties the range (then keep the newline).
+           (if (<= (1- e) b)
+               (list b e 'exclusive)
+             ;; Rule 2: linewise when only blanks precede the start.
+             (if (save-excursion
+                   (goto-char b)
+                   (skip-chars-backward " \t" (line-beginning-position))
+                   (bolp))
+                 (list (save-excursion (goto-char b) (line-beginning-position))
+                       e
+                       'linewise)
+               (list b (1- e) 'exclusive)))
+         (list b e 'exclusive))))))
 
 (defun aim--line-range (count)
   "Return the linewise range (BEG END linewise) of COUNT lines at point."
