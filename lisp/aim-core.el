@@ -136,6 +136,47 @@ Return nil when there is no such OPEN."
         (unless found (forward-char)))
       found)))
 
+;;;; Kills and registers
+;; The unnamed register is the kill-ring head (docs/adr/0002).  Killed
+;; text is tagged with its type (char or line) via a text property, so
+;; paste does not have to guess; named registers are Emacs registers,
+;; written through the pending-register prefix (`\"a').
+
+(defvar aim--pending-register nil
+  "Register character set by the \" prefix for the next kill or paste.")
+
+(defun aim--register-consume ()
+  "Return and clear the pending register character, if any."
+  (prog1 aim--pending-register
+    (setq aim--pending-register nil)))
+
+(defun aim--kill-finish (type)
+  "Tag the latest kill as TYPE (char or line); fill the pending register."
+  (when kill-ring
+    (put-text-property 0 (length (car kill-ring))
+                       'aim-type type (car kill-ring)))
+  (let ((register (aim--register-consume)))
+    (when register
+      (set-register register (current-kill 0)))))
+
+(defun aim--paste-text ()
+  "Text to paste: the pending register's contents, or the latest kill."
+  (let ((register (aim--register-consume)))
+    (if register
+        (let ((value (get-register register)))
+          (unless (stringp value)
+            (user-error "Register %c does not hold text" register))
+          value)
+      (current-kill 0))))
+
+(defun aim--text-linewise-p (text)
+  "Non-nil when TEXT should paste linewise.
+Uses the kill's type tag, falling back to a trailing newline for
+text killed outside aim-mode."
+  (eq (or (get-text-property 0 'aim-type text)
+          (if (string-suffix-p "\n" text) 'line 'char))
+      'line))
+
 ;;;; Jumps
 
 (defvar-local aim--last-jump nil

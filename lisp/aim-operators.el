@@ -12,6 +12,7 @@
 (aim-define-operator aim-delete (beg end type)
   "Kill from BEG to END; linewise TYPE kills whole lines."
   (kill-region beg end)
+  (aim--kill-finish (if (eq type 'linewise) 'line 'char))
   (goto-char beg)
   (when (eq type 'linewise)
     (back-to-indentation)))
@@ -29,6 +30,7 @@ insertion form a single undo step."
                                                     (point)))))))
     (aim--start-undo-session)
     (kill-region beg end)
+    (aim--kill-finish (if (eq type 'linewise) 'line 'char))
     (goto-char beg)
     (when (eq type 'linewise)
       (insert indent "\n")
@@ -40,6 +42,7 @@ insertion form a single undo step."
 Point moves to BEG, except for a linewise yank that already contains
 point, which stays put (like `yy')."
   (copy-region-as-kill beg end)
+  (aim--kill-finish (if (eq type 'linewise) 'line 'char))
   (unless (and (eq type 'linewise)
                (<= beg (point))
                (< (point) end))

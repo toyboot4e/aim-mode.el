@@ -517,6 +517,60 @@
   "Plain motions between change and repeat leave the record alone."
   (aim-test :initial "|abcd efg" :keys "xw." :expect "bcd |fg"))
 
+;;;; Registers and macros
+
+(ert-deftest aim-register-kill-type-tagged ()
+  "Kills are tagged with their type."
+  (aim-test-with-buffer "|abc\n"
+    (aim-mode 1)
+    (aim-test-keys "yy")
+    (should (eq (get-text-property 0 'aim-type (current-kill 0)) 'line))
+    (aim-test-keys "x")
+    (should (eq (get-text-property 0 'aim-type (current-kill 0)) 'char))))
+
+(ert-deftest aim-register-named-yank-paste ()
+  (aim-test :initial "|aa\nbb\n" :keys "\"ayyj\"ap" :expect "aa\nbb\n|aa\n"))
+
+(ert-deftest aim-register-named-delete ()
+  "A named delete fills the register; later kills do not disturb it."
+  (aim-test :initial "|aa bb cc" :keys "\"adwdw\"aP" :expect "aa| cc"))
+
+(ert-deftest aim-paste-charwise-despite-newline ()
+  "A charwise-tagged kill ending in a newline pastes charwise."
+  (aim-test-with-buffer "|ab"
+    (aim-mode 1)
+    (kill-new (propertize "X\n" 'aim-type 'char))
+    (aim-test-keys "p")
+    (should (equal (aim-test-buffer-state) "aX|\nb"))))
+
+(ert-deftest aim-visual-paste-over-selection ()
+  (aim-test :initial "|aa bb" :keys "yiwwviwp" :expect "aa a|a"))
+
+;; Recording (q) cannot be exercised here: Emacs refuses to define a
+;; keyboard macro while one is executing, and the test harness drives
+;; everything through execute-kbd-macro.  Execution is testable.
+
+(ert-deftest aim-macro-execute-from-register ()
+  (aim-test-with-buffer "|abcd"
+    (aim-mode 1)
+    (set-register ?a "x")
+    (aim-test-keys "@a")
+    (should (equal (aim-test-buffer-state) "|bcd"))))
+
+(ert-deftest aim-macro-at-at-repeats ()
+  (aim-test-with-buffer "|abcdef"
+    (aim-mode 1)
+    (set-register ?a "x")
+    (aim-test-keys "@a@@")
+    (should (equal (aim-test-buffer-state) "|cdef"))))
+
+(ert-deftest aim-macro-execute-with-count ()
+  (aim-test-with-buffer "|abcdef"
+    (aim-mode 1)
+    (set-register ?a "x")
+    (aim-test-keys "3@a")
+    (should (equal (aim-test-buffer-state) "|def"))))
+
 ;;;; Undo
 
 (ert-deftest aim-undo-delete-line ()

@@ -110,7 +110,10 @@
   "m" #'aim-set-marker
   "/" #'aim-search-forward
   "?" #'aim-search-backward
-  ":" #'aim-ex)
+  ":" #'aim-ex
+  "\"" #'aim-use-register
+  "q" #'aim-record-macro
+  "@" #'aim-execute-macro)
 
 (define-keymap :keymap aim-visual-state-map
   "ESC" #'aim-visual-exit
@@ -125,7 +128,9 @@
   "y" #'aim-yank
   ">" #'aim-shift-right
   "<" #'aim-shift-left
-  ":" #'aim-ex)
+  ":" #'aim-ex
+  "p" #'aim-visual-paste
+  "\"" #'aim-use-register)
 
 (keymap-set aim-insert-state-map "ESC" #'aim-normal-state)
 (keymap-set aim-operator-state-map "ESC" #'keyboard-quit)

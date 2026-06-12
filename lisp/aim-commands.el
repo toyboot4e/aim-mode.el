@@ -15,6 +15,7 @@
 ;;; Code:
 
 (require 'aim-macros)
+(require 'kmacro)
 
 ;;;; Insert-State entries
 
@@ -57,44 +58,55 @@
   :interactive "p"
   (let ((end (min (line-end-position) (+ (point) count))))
     (when (< (point) end)
-      (kill-region (point) end))))
+      (kill-region (point) end)
+      (aim--kill-finish 'char))))
+
+(defun aim--insert-linewise (text count)
+  "Insert TEXT as lines COUNT times at point (must be at a line start)."
+  (let ((pt (point)))
+    (dotimes (_ count)
+      (insert text)
+      (unless (string-suffix-p "\n" text)
+        (insert "\n")))
+    (goto-char pt)
+    (back-to-indentation)))
 
 (aim-define-command aim-paste-after (count)
-  "Paste the latest kill COUNT times after point.
-Linewise text (ending in a newline) goes below the current line."
+  "Paste COUNT times after point, from the pending register or the kill-ring.
+Linewise text goes below the current line."
   :interactive "p"
-  (let ((text (current-kill 0)))
-    (if (string-suffix-p "\n" text)
+  (let ((text (aim--paste-text)))
+    (if (aim--text-linewise-p text)
         (progn
           (forward-line 1)
           (unless (bolp) (insert "\n"))
-          (let ((pt (point)))
-            (dotimes (_ count) (insert text))
-            (goto-char pt)
-            (back-to-indentation)))
+          (aim--insert-linewise text count))
       (unless (eolp) (forward-char))
       (dotimes (_ count) (insert text))
       (backward-char))))
 
 (aim-define-command aim-paste-before (count)
-  "Paste the latest kill COUNT times before point.
-Linewise text (ending in a newline) goes above the current line."
+  "Paste COUNT times before point, from the pending register or the kill-ring.
+Linewise text goes above the current line."
   :interactive "p"
-  (let ((text (current-kill 0)))
-    (if (string-suffix-p "\n" text)
+  (let ((text (aim--paste-text)))
+    (if (aim--text-linewise-p text)
         (progn
           (forward-line 0)
-          (let ((pt (point)))
-            (dotimes (_ count) (insert text))
-            (goto-char pt)
-            (back-to-indentation)))
+          (aim--insert-linewise text count))
       (dotimes (_ count) (insert text))
       (backward-char))))
+
+(defun aim-use-register ()
+  "Select the register for the next kill or paste (Vim's \" prefix)."
+  (interactive)
+  (setq aim--pending-register (aim--read-char "\"-")))
 
 (aim-define-command aim-kill-line-rest (count)
   "Kill to the end of the line, COUNT - 1 lines below (Vim's D)."
   :interactive "p"
-  (kill-region (point) (line-end-position count)))
+  (kill-region (point) (line-end-position count))
+  (aim--kill-finish 'char))
 
 (aim-define-command aim-change-line-rest (count)
   "Change to the end of the line, COUNT - 1 lines below (Vim's C).
@@ -102,13 +114,15 @@ The kill and the following insertion form a single undo step."
   :interactive "p"
   (aim--start-undo-session)
   (kill-region (point) (line-end-position count))
+  (aim--kill-finish 'char)
   (aim-switch-state 'insert))
 
 (aim-define-command aim-copy-line (count)
   "Copy COUNT whole lines into the kill-ring (Vim's Y, which is yy)."
   :interactive "p"
   (copy-region-as-kill (line-beginning-position)
-                       (line-beginning-position (1+ count))))
+                       (line-beginning-position (1+ count)))
+  (aim--kill-finish 'line))
 
 (aim-define-command aim-replace-char (count)
   "Replace COUNT characters after point with the next typed character.
@@ -154,6 +168,40 @@ Point ends on the joining space."
 Shared with Emacs's own register system (`C-x r')."
   (interactive)
   (point-to-register (aim--read-char "m-")))
+
+;;;; Keyboard macros (q/@ over kmacro and registers, docs/adr/0002)
+
+(defvar aim--macro-register nil
+  "Register being recorded into by `aim-record-macro'.")
+
+(defvar aim--macro-last-register nil
+  "Register of the last executed macro, for `@@'.")
+
+(defun aim-record-macro ()
+  "Start recording a keyboard macro into a register; press q again to stop."
+  (interactive)
+  (if defining-kbd-macro
+      (progn
+        (kmacro-end-macro nil)
+        (when aim--macro-register
+          (set-register aim--macro-register last-kbd-macro)
+          (setq aim--macro-register nil)))
+    (setq aim--macro-register (aim--read-char "q-"))
+    (kmacro-start-macro nil)))
+
+(defun aim-execute-macro (count)
+  "Execute the macro in the register read next, COUNT times.
+`@@' repeats the last executed macro."
+  (interactive "p")
+  (let ((register (aim--read-char "@-")))
+    (when (eq register ?@)
+      (setq register (or aim--macro-last-register
+                         (user-error "No previous macro"))))
+    (let ((macro (get-register register)))
+      (unless macro
+        (user-error "Nothing in register %c" register))
+      (setq aim--macro-last-register register)
+      (execute-kbd-macro macro count))))
 
 ;;;; Undo
 

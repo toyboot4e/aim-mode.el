@@ -10,7 +10,7 @@
 
 ;;; Code:
 
-(require 'aim-core)
+(require 'aim-macros)
 
 (defun aim-visual-char ()
   "Start a charwise visual selection; toggle it off when active."
@@ -56,6 +56,27 @@
      (goto-char p)
      (aim-switch-state 'visual))
     (_ (user-error "No previous selection"))))
+
+(defun aim-visual-paste (_count)
+  "Replace the selection with a paste.
+The replaced text goes to the kill-ring, like Vim."
+  (interactive "p")
+  (let* ((text (aim--paste-text))
+         (linewise (aim--text-linewise-p text))
+         (range (aim--visual-range)))
+    (aim--visual-leave)
+    (kill-region (car range) (cadr range))
+    (aim--kill-finish (if (eq (nth 2 range) 'linewise) 'line 'char))
+    (goto-char (car range))
+    (if linewise
+        (let ((pt (point)))
+          (unless (bolp) (insert "\n"))
+          (insert text)
+          (unless (string-suffix-p "\n" text) (insert "\n"))
+          (goto-char pt)
+          (back-to-indentation))
+      (insert text)
+      (backward-char))))
 
 (defun aim-visual-object (count)
   "Select the text object read after this key (i/a in visual State).
