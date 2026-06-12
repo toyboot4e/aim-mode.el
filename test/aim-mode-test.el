@@ -517,6 +517,21 @@
   "Plain motions between change and repeat leave the record alone."
   (aim-test :initial "|abcd efg" :keys "xw." :expect "bcd |fg"))
 
+;;;; Visual block
+
+(ert-deftest aim-block-delete ()
+  (aim-test :initial "ab|cd\nefgh\nijkl\n" :keys "C-v jjld"
+            :expect "ab|\nef\nij\n"))
+
+(ert-deftest aim-block-yank-paste ()
+  (aim-test :initial "|ab\ncd\n" :keys "C-v jly$p"
+            :expect "ab|ab\ncdcd\n"))
+
+(ert-deftest aim-block-change ()
+  "Block change deletes the rectangle; insertion is on the first line."
+  (aim-test :initial "|ab\ncd\n" :keys "C-v jcX ESC"
+            :expect "|Xb\nd\n"))
+
 ;;;; Keybinding API
 
 (ert-deftest aim-normal-state-does-not-self-insert ()

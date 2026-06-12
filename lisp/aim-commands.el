@@ -16,6 +16,7 @@
 
 (require 'aim-macros)
 (require 'kmacro)
+(require 'rect)
 
 ;;;; Insert-State entries
 
@@ -71,31 +72,46 @@
     (goto-char pt)
     (back-to-indentation)))
 
+(defun aim--insert-block (text)
+  "Insert block-tagged TEXT as a rectangle at point."
+  (let ((pt (point)))
+    (insert-rectangle (split-string text "\n"))
+    (goto-char pt)))
+
 (aim-define-command aim-paste-after (count)
   "Paste COUNT times after point, from the pending register or the kill-ring.
-Linewise text goes below the current line."
+Linewise text goes below the current line; a block pastes as a
+rectangle after the cursor column."
   :interactive "p"
   (let ((text (aim--paste-text)))
-    (if (aim--text-linewise-p text)
-        (progn
-          (forward-line 1)
-          (unless (bolp) (insert "\n"))
-          (aim--insert-linewise text count))
+    (cond
+     ((eq (get-text-property 0 'aim-type text) 'block)
+      (unless (eolp) (forward-char))
+      (aim--insert-block text))
+     ((aim--text-linewise-p text)
+      (forward-line 1)
+      (unless (bolp) (insert "\n"))
+      (aim--insert-linewise text count))
+     (t
       (unless (eolp) (forward-char))
       (dotimes (_ count) (insert text))
-      (backward-char))))
+      (backward-char)))))
 
 (aim-define-command aim-paste-before (count)
   "Paste COUNT times before point, from the pending register or the kill-ring.
-Linewise text goes above the current line."
+Linewise text goes above the current line; a block pastes as a
+rectangle at the cursor column."
   :interactive "p"
   (let ((text (aim--paste-text)))
-    (if (aim--text-linewise-p text)
-        (progn
-          (forward-line 0)
-          (aim--insert-linewise text count))
+    (cond
+     ((eq (get-text-property 0 'aim-type text) 'block)
+      (aim--insert-block text))
+     ((aim--text-linewise-p text)
+      (forward-line 0)
+      (aim--insert-linewise text count))
+     (t
       (dotimes (_ count) (insert text))
-      (backward-char))))
+      (backward-char)))))
 
 (defun aim-use-register ()
   "Select the register for the next kill or paste (Vim's \" prefix)."

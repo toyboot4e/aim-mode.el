@@ -36,6 +36,18 @@
          (set-mark (point))
          (aim-switch-state 'visual))))
 
+(defun aim-visual-block ()
+  "Start a blockwise visual selection; toggle it off when active."
+  (interactive)
+  (cond ((and (eq aim-state 'visual) (eq aim--visual-kind 'block))
+         (aim--visual-leave))
+        ((eq aim-state 'visual)
+         (setq aim--visual-kind 'block))
+        (t
+         (setq aim--visual-kind 'block)
+         (set-mark (point))
+         (aim-switch-state 'visual))))
+
 (defun aim-visual-exit ()
   "Leave visual State."
   (interactive)
@@ -61,6 +73,8 @@
   "Replace the selection with a paste.
 The replaced text goes to the kill-ring, like Vim."
   (interactive "p")
+  (when (eq aim--visual-kind 'block)
+    (user-error "Paste over a block selection is not supported yet"))
   (let* ((text (aim--paste-text))
          (linewise (aim--text-linewise-p text))
          (range (aim--visual-range)))

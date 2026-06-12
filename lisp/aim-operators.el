@@ -8,11 +8,22 @@
 ;;; Code:
 
 (require 'aim-macros)
+(require 'rect)
+
+(defun aim--kill-rectangle (beg end)
+  "Delete the BEG..END rectangle into the kill-ring, block-tagged."
+  (kill-new (propertize (mapconcat #'identity
+                                   (delete-extract-rectangle beg end)
+                                   "\n")
+                        'aim-type 'block)))
 
 (aim-define-operator aim-delete (beg end type)
-  "Kill from BEG to END; linewise TYPE kills whole lines."
-  (kill-region beg end)
-  (aim--kill-finish (if (eq type 'linewise) 'line 'char))
+  "Kill from BEG to END; linewise TYPE kills whole lines.
+A block TYPE kills the rectangle between the corners."
+  (if (eq type 'block)
+      (aim--kill-rectangle beg end)
+    (kill-region beg end)
+    (aim--kill-finish (if (eq type 'linewise) 'line 'char)))
   (goto-char beg)
   (when (eq type 'linewise)
     (back-to-indentation)))
@@ -29,8 +40,11 @@ insertion form a single undo step."
                        (buffer-substring beg (progn (back-to-indentation)
                                                     (point)))))))
     (aim--start-undo-session)
-    (kill-region beg end)
-    (aim--kill-finish (if (eq type 'linewise) 'line 'char))
+    (if (eq type 'block)
+        ;; Insertion is not replicated per line yet (docs/CAVEATS.md).
+        (aim--kill-rectangle beg end)
+      (kill-region beg end)
+      (aim--kill-finish (if (eq type 'linewise) 'line 'char)))
     (goto-char beg)
     (when (eq type 'linewise)
       (insert indent "\n")
@@ -40,9 +54,15 @@ insertion form a single undo step."
 (aim-define-operator aim-yank (beg end type)
   "Copy from BEG to END into the kill-ring.
 Point moves to BEG, except for a linewise yank that already contains
-point, which stays put (like `yy')."
-  (copy-region-as-kill beg end)
-  (aim--kill-finish (if (eq type 'linewise) 'line 'char))
+point, which stays put (like `yy').  A block TYPE copies the
+rectangle."
+  (if (eq type 'block)
+      (kill-new (propertize (mapconcat #'identity
+                                       (extract-rectangle beg end)
+                                       "\n")
+                            'aim-type 'block))
+    (copy-region-as-kill beg end)
+    (aim--kill-finish (if (eq type 'linewise) 'line 'char)))
   (unless (and (eq type 'linewise)
                (<= beg (point))
                (< (point) end))

@@ -106,6 +106,7 @@
   "O" #'aim-open-above
   "v" #'aim-visual-char
   "V" #'aim-visual-line
+  "C-v" #'aim-visual-block
   "g v" #'aim-visual-restore
   "R" #'aim-replace-state
   "m" #'aim-set-marker
@@ -120,6 +121,7 @@
   "ESC" #'aim-visual-exit
   "v" #'aim-visual-char
   "V" #'aim-visual-line
+  "C-v" #'aim-visual-block
   "o" #'aim-visual-exchange
   "i" #'aim-visual-object
   "a" #'aim-visual-object

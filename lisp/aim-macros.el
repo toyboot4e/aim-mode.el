@@ -174,13 +174,27 @@ before the first non-blank of its line."
 ;;;; Operator-pending State
 
 (defun aim--visual-range ()
-  "Range (BEG END TYPE) of the active visual selection."
+  "Range (BEG END TYPE) of the active visual selection.
+A block selection yields type `block' with rectangle corner
+positions spanning both endpoints' columns inclusively."
   (let ((m (or (mark) (user-error "No selection")))
         (p (point)))
-    (if (eq aim--visual-kind 'line)
-        (aim--expand-range (min m p) (max m p) 'linewise)
+    (pcase aim--visual-kind
+      ('line (aim--expand-range (min m p) (max m p) 'linewise))
+      ('block
+       (let* ((c1 (save-excursion (goto-char m) (current-column)))
+              (c2 (save-excursion (goto-char p) (current-column)))
+              (left (min c1 c2))
+              (right (1+ (max c1 c2))))
+         (list (save-excursion (goto-char (min m p))
+                               (move-to-column left)
+                               (point))
+               (save-excursion (goto-char (max m p))
+                               (move-to-column right)
+                               (point))
+               'block)))
       ;; Charwise selections include the character at their far end.
-      (list (min m p) (min (1+ (max m p)) (point-max)) 'exclusive))))
+      (_ (list (min m p) (min (1+ (max m p)) (point-max)) 'exclusive)))))
 
 (defun aim--operator-range (op-keys &optional operator)
   "Return (BEG END TYPE) for an operator: the selection or a read motion.
