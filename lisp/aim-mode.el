@@ -60,6 +60,8 @@
   "d" #'aim-delete
   "c" #'aim-change
   "y" #'aim-yank
+  ">" #'aim-shift-right
+  "<" #'aim-shift-left
   "x" #'aim-delete-char
   "p" #'aim-paste-after
   "P" #'aim-paste-before

@@ -184,6 +184,15 @@
 (ert-deftest aim-op-yank-word-paste-before ()
   (aim-test :initial "|hello world" :keys "ywP" :expect "hello| hello world"))
 
+(ert-deftest aim-op-shift-right-line ()
+  (aim-test :initial "|a\nb\n" :keys ">>" :expect "    |a\nb\n"))
+
+(ert-deftest aim-op-shift-right-motion ()
+  (aim-test :initial "|a\nb\nc\n" :keys ">j" :expect "    |a\n    b\nc\n"))
+
+(ert-deftest aim-op-shift-left ()
+  (aim-test :initial "    a\n   |  b\n" :keys "<<" :expect "    a\n |b\n"))
+
 ;;;; Simple commands
 
 (ert-deftest aim-cmd-delete-char ()

@@ -45,5 +45,22 @@ point, which stays put (like `yy')."
                (< (point) end))
     (goto-char beg)))
 
+(defcustom aim-shift-width 4
+  "Columns shifted by the > and < operators."
+  :type 'natnum
+  :group 'aim)
+
+(aim-define-operator aim-shift-right (beg end _type)
+  "Shift the lines in BEG..END right by `aim-shift-width' columns."
+  (indent-rigidly beg end aim-shift-width)
+  (goto-char beg)
+  (back-to-indentation))
+
+(aim-define-operator aim-shift-left (beg end _type)
+  "Shift the lines in BEG..END left by `aim-shift-width' columns."
+  (indent-rigidly beg end (- aim-shift-width))
+  (goto-char beg)
+  (back-to-indentation))
+
 (provide 'aim-operators)
 ;;; aim-operators.el ends here
