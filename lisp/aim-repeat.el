@@ -58,10 +58,10 @@ PROMPT is passed to `read-char'."
    (prefix-arg nil)
    ((not aim-state)
     (setq aim--session-keys nil))
-   ;; Accumulating an insert session.
+   ;; Accumulating an insert (or replace) session.
    (aim--session-keys
     (push (this-single-command-keys) aim--session-keys)
-    (unless (eq aim-state 'insert)
+    (unless (memq aim-state '(insert replace))
       (setq aim--repeat-record
             (list :keys (apply #'vconcat (nreverse aim--session-keys))
                   :count aim--session-count)
@@ -77,8 +77,8 @@ PROMPT is passed to `read-char'."
            (count (and current-prefix-arg
                        (prefix-numeric-value current-prefix-arg))))
       (when keys
-        (if (eq aim-state 'insert)
-            ;; The command opened an insert session; keep recording.
+        (if (memq aim-state '(insert replace))
+            ;; The command opened an editing session; keep recording.
             (setq aim--session-keys (list keys)
                   aim--session-count count)
           (setq aim--repeat-record (list :keys keys :count count)))))))

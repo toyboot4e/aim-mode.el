@@ -107,6 +107,7 @@
   "v" #'aim-visual-char
   "V" #'aim-visual-line
   "g v" #'aim-visual-restore
+  "R" #'aim-replace-state
   "m" #'aim-set-marker
   "/" #'aim-search-forward
   "?" #'aim-search-backward
@@ -134,6 +135,8 @@
 
 (keymap-set aim-insert-state-map "ESC" #'aim-normal-state)
 (keymap-set aim-operator-state-map "ESC" #'keyboard-quit)
+(keymap-set aim-replace-state-map "ESC" #'aim-normal-state)
+(keymap-set aim-replace-state-map "DEL" #'aim-replace-backspace)
 
 ;; Text objects, read in operator-pending State.
 (dolist (entry '(("w" . "word")

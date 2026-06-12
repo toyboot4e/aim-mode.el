@@ -47,11 +47,20 @@ Also serves as the activation variable in `aim--emulation-alist'.")
   :doc "Bindings active in visual State."
   :parent aim-motion-map)
 
+(defvar-keymap aim-replace-state-map
+  :doc "Bindings active in replace State; unbound keys overwrite.")
+
+(defvar-keymap aim-motion-state-map
+  :doc "Bindings active in motion State: motions only."
+  :parent aim-motion-map)
+
 (defvar aim--state-maps
   `((normal . ,aim-normal-state-map)
     (operator-pending . ,aim-operator-state-map)
     (insert . ,aim-insert-state-map)
-    (visual . ,aim-visual-state-map))
+    (visual . ,aim-visual-state-map)
+    (replace . ,aim-replace-state-map)
+    (motion . ,aim-motion-state-map))
   "Alist mapping State symbols to their keymaps.")
 
 (defvar-local aim--emulation-alist nil
@@ -240,29 +249,52 @@ text killed outside aim-mode."
   (deactivate-mark)
   (aim-switch-state 'normal))
 
+;;;; Replace-State bookkeeping
+;; Typed characters overwrite via `overwrite-mode'; the characters they
+;; replaced are remembered so backspace can restore them.
+
+(defvar-local aim--replace-saved nil
+  "Alist of (POSITION . CHAR) overwritten this replace session.
+CHAR is nil when the typed character was appended at end of line.")
+
+(defun aim--replace-pre-command ()
+  "Remember the character about to be overwritten in replace State."
+  (when (and (eq aim-state 'replace)
+             (eq this-command 'self-insert-command))
+    (push (cons (point) (and (not (eolp)) (char-after)))
+          aim--replace-saved)))
+
+(add-hook 'pre-command-hook #'aim--replace-pre-command)
+
 ;;;; State switching
 
 (defun aim-switch-state (state)
   "Switch the current buffer to STATE."
-  (let ((old aim-state))
-    (when (and (eq old 'insert) (not (eq state 'insert)))
+  (let ((old aim-state)
+        (editing '(insert replace)))
+    (when (and (memq old editing) (not (memq state editing)))
       (aim--end-undo-session))
+    (when (and (eq old 'replace) (not (eq state 'replace)))
+      (overwrite-mode -1)
+      (setq aim--replace-saved nil))
     (setq aim-state state
           aim--emulation-alist
           (let ((map (alist-get state aim--state-maps)))
             (and map (list (cons 'aim-state map)))))
-    (when (and (eq state 'insert) (not (eq old 'insert)))
-      (aim--start-undo-session)))
+    (when (and (memq state editing) (not (memq old editing)))
+      (aim--start-undo-session))
+    (when (and (eq state 'replace) (not (eq old 'replace)))
+      (overwrite-mode 1)))
   (aim--update-cursor))
 
 (defun aim-normal-state ()
   "Enter normal State.
-Leaving insert State moves point one character left unless at the
-beginning of a line, mirroring Vim."
+Leaving insert or replace State moves point one character left
+unless at the beginning of a line, mirroring Vim."
   (interactive)
-  (let ((was-insert (eq aim-state 'insert)))
+  (let ((was-editing (memq aim-state '(insert replace))))
     (aim-switch-state 'normal)
-    (when (and was-insert (not (bolp)))
+    (when (and was-editing (not (bolp)))
       (backward-char))))
 
 (defun aim-insert-state ()

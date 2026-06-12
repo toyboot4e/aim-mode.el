@@ -161,6 +161,30 @@ Point ends on the joining space."
         (insert " ")
         (backward-char)))))
 
+;;;; Replace and motion States
+
+(aim-define-command aim-replace-state ()
+  "Enter replace State: typed characters overwrite (Vim's R)."
+  (aim-switch-state 'replace))
+
+(defun aim-replace-backspace ()
+  "Undo the last replacement, restoring the original character.
+Before the session's first replacement, just move left."
+  (interactive)
+  (let ((entry (assq (1- (point)) aim--replace-saved)))
+    (if (not entry)
+        (backward-char)
+      (delete-char -1)
+      (when (cdr entry)
+        (insert (cdr entry))
+        (backward-char))
+      (setq aim--replace-saved (delq entry aim--replace-saved)))))
+
+(defun aim-motion-state ()
+  "Enter motion State: motions only, for read-only contexts."
+  (interactive)
+  (aim-switch-state 'motion))
+
 ;;;; Marks
 
 (defun aim-set-marker ()

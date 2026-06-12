@@ -517,6 +517,24 @@
   "Plain motions between change and repeat leave the record alone."
   (aim-test :initial "|abcd efg" :keys "xw." :expect "bcd |fg"))
 
+;;;; Replace State
+
+(ert-deftest aim-replace-overwrites ()
+  (aim-test :initial "|abcd" :keys "Rxy ESC" :expect "x|ycd"))
+
+(ert-deftest aim-replace-appends-at-eol ()
+  (aim-test :initial "ab|" :keys "Rxy ESC" :expect "abx|y"))
+
+(ert-deftest aim-replace-backspace-restores ()
+  (aim-test :initial "|abcd" :keys "Rxy DEL z ESC" :expect "x|zcd"))
+
+(ert-deftest aim-replace-repeat ()
+  "A whole replace session repeats with ."
+  (aim-test :initial "|ab\ncd\n" :keys "Rxy ESC j0." :expect "xy\nx|y\n"))
+
+(ert-deftest aim-replace-undo-one-step ()
+  (aim-test :initial "|abcd" :keys "Rxyz ESC u" :expect "|abcd"))
+
 ;;;; Registers and macros
 
 (ert-deftest aim-register-kill-type-tagged ()
