@@ -43,6 +43,9 @@
   "w" #'aim-forward-word-begin
   "b" #'aim-backward-word-begin
   "e" #'aim-forward-word-end
+  "W" #'aim-forward-bigword-begin
+  "B" #'aim-backward-bigword-begin
+  "E" #'aim-forward-bigword-end
   "0" #'aim-line-beginning
   "^" #'aim-first-non-blank
   "$" #'aim-line-end

@@ -56,6 +56,42 @@ Holds ((aim-state . MAP)) for the current State's map; since
 
 (add-to-list 'emulation-mode-map-alists 'aim--emulation-alist)
 
+;;;; Word vocabulary
+;; Shared by motions and text objects (Leaves that may not depend on
+;; each other).  A word follows the buffer's syntax table — word and
+;; symbol constituents — approximating Vim's `iskeyword'; runs of other
+;; non-blank characters form punctuation groups.
+
+(defun aim--word-char-p (c)
+  "Non-nil when character C is a word constituent (word or symbol syntax)."
+  (and c (not (eq c ?\n)) (memq (char-syntax c) '(?w ?_))))
+
+(defun aim--blank-char-p (c)
+  "Non-nil when character C is a blank (space or tab)."
+  (memq c '(?\s ?\t)))
+
+(defun aim--punct-char-p (c)
+  "Non-nil when character C is non-blank and not a word constituent."
+  (and c (not (eq c ?\n)) (not (aim--blank-char-p c)) (not (aim--word-char-p c))))
+
+(defun aim--skip-word-forward ()
+  "Skip forward over word constituents."
+  (skip-syntax-forward "w_"))
+
+(defun aim--skip-word-backward ()
+  "Skip backward over word constituents."
+  (skip-syntax-backward "w_"))
+
+(defun aim--skip-punct-forward ()
+  "Skip forward over a punctuation group."
+  (while (aim--punct-char-p (char-after))
+    (forward-char)))
+
+(defun aim--skip-punct-backward ()
+  "Skip backward over a punctuation group."
+  (while (aim--punct-char-p (char-before))
+    (backward-char)))
+
 ;;;; Cursor
 
 (defcustom aim-state-cursors

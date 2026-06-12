@@ -57,6 +57,23 @@
 (ert-deftest aim-motion-word-end ()
   (aim-test :initial "|hello world" :keys "e" :expect "hell|o world"))
 
+(ert-deftest aim-motion-word-syntax-table ()
+  "Word motions follow the buffer's syntax table (- in Lisp symbols)."
+  (aim-test-with-buffer "|foo-bar baz"
+    (lisp-mode)
+    (aim-mode 1)
+    (aim-test-keys "w")
+    (should (equal (aim-test-buffer-state) "foo-bar |baz"))))
+
+(ert-deftest aim-motion-bigword-forward ()
+  (aim-test :initial "|foo.bar baz" :keys "W" :expect "foo.bar |baz"))
+
+(ert-deftest aim-motion-bigword-backward ()
+  (aim-test :initial "foo.bar |baz" :keys "B" :expect "|foo.bar baz"))
+
+(ert-deftest aim-motion-bigword-end ()
+  (aim-test :initial "|foo.bar baz" :keys "E" :expect "foo.ba|r baz"))
+
 (ert-deftest aim-motion-h-stops-at-bol ()
   (aim-test :initial "abc\nd|ef" :keys "5h" :expect "abc\n|def"))
 

@@ -14,9 +14,6 @@
 
 (require 'aim-macros)
 
-(defconst aim--word-chars "[:alnum:]_"
-  "Characters that form a word, as a `skip-chars-forward' set.")
-
 ;;;; Character and line motions
 
 (aim-define-motion aim-backward-char (count)
@@ -73,23 +70,16 @@ Vim's `dw'-keeps-the-newline special case is not handled here: it
 falls out of the exclusive-motion adjustment rules in
 `aim--expand-range'."
   (dotimes (_ count)
-    (cond ((looking-at-p (concat "[" aim--word-chars "]"))
-           (skip-chars-forward aim--word-chars))
-          ((not (looking-at-p "[ \t\n]"))
-           (skip-chars-forward (concat "^" aim--word-chars " \t\n"))))
+    (cond ((aim--word-char-p (char-after)) (aim--skip-word-forward))
+          ((aim--punct-char-p (char-after)) (aim--skip-punct-forward)))
     (skip-chars-forward " \t\n")))
 
 (aim-define-motion aim-backward-word-begin (count)
   "Move to the beginning of the COUNTth previous word."
   (dotimes (_ count)
     (skip-chars-backward " \t\n")
-    (let ((c (char-before)))
-      (cond ((null c))
-            ((string-match-p (concat "[" aim--word-chars "]")
-                             (char-to-string c))
-             (skip-chars-backward aim--word-chars))
-            (t
-             (skip-chars-backward (concat "^" aim--word-chars " \t\n")))))))
+    (cond ((aim--word-char-p (char-before)) (aim--skip-word-backward))
+          ((aim--punct-char-p (char-before)) (aim--skip-punct-backward)))))
 
 (aim-define-motion aim-forward-word-end (count)
   "Move onto the last character of the COUNTth next word."
@@ -97,10 +87,29 @@ falls out of the exclusive-motion adjustment rules in
   (dotimes (_ count)
     (unless (eobp) (forward-char))
     (skip-chars-forward " \t\n")
-    (cond ((looking-at-p (concat "[" aim--word-chars "]"))
-           (skip-chars-forward aim--word-chars))
-          ((not (eobp))
-           (skip-chars-forward (concat "^" aim--word-chars " \t\n"))))
+    (cond ((aim--word-char-p (char-after)) (aim--skip-word-forward))
+          ((aim--punct-char-p (char-after)) (aim--skip-punct-forward)))
+    (unless (bobp) (backward-char))))
+
+(aim-define-motion aim-forward-bigword-begin (count)
+  "Move to the beginning of the COUNTth next WORD (non-blank run)."
+  (dotimes (_ count)
+    (skip-chars-forward "^ \t\n")
+    (skip-chars-forward " \t\n")))
+
+(aim-define-motion aim-backward-bigword-begin (count)
+  "Move to the beginning of the COUNTth previous WORD (non-blank run)."
+  (dotimes (_ count)
+    (skip-chars-backward " \t\n")
+    (skip-chars-backward "^ \t\n")))
+
+(aim-define-motion aim-forward-bigword-end (count)
+  "Move onto the last character of the COUNTth next WORD."
+  :type inclusive
+  (dotimes (_ count)
+    (unless (eobp) (forward-char))
+    (skip-chars-forward " \t\n")
+    (skip-chars-forward "^ \t\n")
     (unless (bobp) (backward-char))))
 
 ;;;; Buffer motions
