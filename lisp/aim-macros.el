@@ -69,6 +69,33 @@ This expresses Vim special cases like `cw' acting as `ce'."
          (interactive (aim--operator-range (this-single-command-keys) ',name))
          ,@body))))
 
+(defmacro aim-define-text-object (name arglist &rest body)
+  "Define NAME as a text object with ARGLIST and BODY.
+
+ARGLIST must accept the count as its first argument.  BODY may begin
+with a docstring, then optionally :type (`charwise', the default, or
+`linewise').  BODY returns the object's range as a cons (BEG . END);
+a linewise object must return exact line boundaries (BEG at a line
+beginning, END at the line beginning after its last line).  Signal
+`user-error' when there is no object at point.
+
+Text objects are read in operator-pending State in place of a
+motion; they are not meaningful as standalone normal-State commands."
+  (declare (indent defun) (doc-string 3))
+  (let ((doc (if (stringp (car body)) (pop body)
+               (format "Text object `%s'." name)))
+        (type 'charwise))
+    (while (keywordp (car body))
+      (pcase (pop body)
+        (:type (setq type (pop body)))
+        (other (error "Unknown aim-define-text-object keyword: %S" other))))
+    `(progn
+       (put ',name 'aim-text-object ',type)
+       (defun ,name ,arglist
+         ,doc
+         (interactive "p")
+         ,@body))))
+
 (defmacro aim-define-command (name arglist &rest body)
   "Define NAME as a repeatable editing command with ARGLIST and BODY.
 
@@ -178,6 +205,14 @@ the operator command symbol, used for its motion substitutions."
                 (aim--operator-finish-transcript)
                 (throw 'aim--range
                        (aim--line-range (* op-count (or motion-count 1)))))
+               ((and cmd (get cmd 'aim-text-object))
+                (let ((range (funcall cmd (* op-count (or motion-count 1)))))
+                  (aim--operator-finish-transcript)
+                  (throw 'aim--range
+                         (list (car range) (cdr range)
+                               (if (eq (get cmd 'aim-text-object) 'linewise)
+                                   'linewise
+                                 'exclusive)))))
                ((and cmd (get cmd 'aim-motion-type))
                 (when (and operator (not (looking-at-p "[ \t\n]")))
                   (setq cmd (or (alist-get cmd (get operator 'aim--motion-subst))

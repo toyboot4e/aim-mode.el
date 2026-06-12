@@ -30,6 +30,7 @@
 (require 'aim-repeat)
 (require 'aim-macros)
 (require 'aim-motions)
+(require 'aim-text-objects)
 (require 'aim-operators)
 (require 'aim-commands)
 
@@ -88,6 +89,22 @@
 
 (keymap-set aim-insert-state-map "ESC" #'aim-normal-state)
 (keymap-set aim-operator-state-map "ESC" #'keyboard-quit)
+
+;; Text objects, read in operator-pending State.
+(dolist (entry '(("w" . "word")
+                 ("W" . "bigword")
+                 ("(" . "paren") (")" . "paren") ("b" . "paren")
+                 ("[" . "bracket") ("]" . "bracket")
+                 ("{" . "brace") ("}" . "brace") ("B" . "brace")
+                 ("<" . "angle") (">" . "angle")
+                 ("\"" . "double-quote")
+                 ("'" . "single-quote")
+                 ("`" . "back-quote")
+                 ("p" . "paragraph")))
+  (keymap-set aim-operator-state-map (concat "i " (car entry))
+              (intern (format "aim-inner-%s" (cdr entry))))
+  (keymap-set aim-operator-state-map (concat "a " (car entry))
+              (intern (format "aim-outer-%s" (cdr entry)))))
 
 ;;;; Minor mode
 

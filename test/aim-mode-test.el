@@ -220,6 +220,71 @@
 (ert-deftest aim-op-shift-left ()
   (aim-test :initial "    a\n   |  b\n" :keys "<<" :expect "    a\n |b\n"))
 
+;;;; Text objects
+
+(ert-deftest aim-obj-inner-word ()
+  (aim-test :initial "he|llo world" :keys "diw" :expect "| world"))
+
+(ert-deftest aim-obj-inner-word-change ()
+  (aim-test :initial "he|llo world" :keys "ciwxx ESC" :expect "x|x world"))
+
+(ert-deftest aim-obj-inner-word-on-blank ()
+  (aim-test :initial "ab| cd" :keys "diw" :expect "ab|cd"))
+
+(ert-deftest aim-obj-inner-word-count ()
+  "2iw covers the word and the following blank run."
+  (aim-test :initial "|aa bb" :keys "d2iw" :expect "|bb"))
+
+(ert-deftest aim-obj-outer-word ()
+  (aim-test :initial "aa |bb cc" :keys "daw" :expect "aa |cc"))
+
+(ert-deftest aim-obj-outer-word-no-trailing ()
+  "Without trailing blanks, aw takes the leading ones."
+  (aim-test :initial "aa b|b" :keys "daw" :expect "aa|"))
+
+(ert-deftest aim-obj-outer-word-repeat ()
+  (aim-test :initial "|aa bb cc dd" :keys "daw." :expect "|cc dd"))
+
+(ert-deftest aim-obj-inner-bigword ()
+  (aim-test :initial "x fo|o.bar y" :keys "diW" :expect "x | y"))
+
+(ert-deftest aim-obj-inner-paren ()
+  (aim-test :initial "(a|bc)" :keys "di(" :expect "(|)"))
+
+(ert-deftest aim-obj-inner-paren-alias-b ()
+  (aim-test :initial "(a|bc)" :keys "dib" :expect "(|)"))
+
+(ert-deftest aim-obj-outer-paren ()
+  (aim-test :initial "x(a|bc)y" :keys "da(" :expect "x|y"))
+
+(ert-deftest aim-obj-paren-nested-count ()
+  (aim-test :initial "(a(b|c)d)" :keys "2di(" :expect "(|)"))
+
+(ert-deftest aim-obj-paren-on-open ()
+  (aim-test :initial "|(abc)" :keys "di(" :expect "(|)"))
+
+(ert-deftest aim-obj-inner-bracket ()
+  (aim-test :initial "[a|b]" :keys "di]" :expect "[|]"))
+
+(ert-deftest aim-obj-inner-brace ()
+  (aim-test :initial "{a|b}" :keys "diB" :expect "{|}"))
+
+(ert-deftest aim-obj-change-inner-quote ()
+  (aim-test :initial "x \"a|bc\" y" :keys "ci\"yo ESC" :expect "x \"y|o\" y"))
+
+(ert-deftest aim-obj-quote-before-point ()
+  "Quote objects reach forward to the next quoted text on the line."
+  (aim-test :initial "x| \"ab\" y" :keys "di\"" :expect "x \"|\" y"))
+
+(ert-deftest aim-obj-outer-quote-trailing-space ()
+  (aim-test :initial "x \"a|b\" y" :keys "da\"" :expect "x |y"))
+
+(ert-deftest aim-obj-inner-paragraph ()
+  (aim-test :initial "a\nb|\nc\n\nd\n" :keys "dip" :expect "|\nd\n"))
+
+(ert-deftest aim-obj-outer-paragraph ()
+  (aim-test :initial "a\nb|\nc\n\nd\n" :keys "dap" :expect "|d\n"))
+
 ;;;; Simple commands
 
 (ert-deftest aim-cmd-delete-char ()
