@@ -337,6 +337,50 @@
 (ert-deftest aim-obj-outer-paragraph ()
   (aim-test :initial "a\nb|\nc\n\nd\n" :keys "dap" :expect "|d\n"))
 
+;;;; Ex Dispatcher
+
+(ert-deftest aim-ex-goto-line ()
+  (aim-test :initial "|a\nb\nc\n" :keys ":3 RET" :expect "a\nb\n|c\n"))
+
+(ert-deftest aim-ex-goto-last-line ()
+  (aim-test :initial "|a\nb\nc\n" :keys ":$ RET" :expect "a\nb\n|c\n"))
+
+(ert-deftest aim-ex-substitute-current-line ()
+  "Without a range, :s touches the first match of the current line."
+  (aim-test :initial "aa\na|a\n" :keys ":s/a/X/ RET" :expect "aa\n|Xa\n"))
+
+(ert-deftest aim-ex-substitute-global ()
+  (aim-test :initial "a|a\nba\n" :keys ":%s/a/X/g RET" :expect "XX\n|bX\n"))
+
+(ert-deftest aim-ex-substitute-line-range ()
+  (aim-test :initial "|aa\naa\naa\n" :keys ":1,2s/a/X/g RET"
+            :expect "XX\n|XX\naa\n"))
+
+(ert-deftest aim-ex-substitute-from-visual ()
+  ":s from visual State defaults to the selected lines."
+  (aim-test :initial "|aa\naa\nba\n" :keys "Vj:s/a/X/g RET"
+            :expect "XX\n|XX\nba\n"))
+
+(ert-deftest aim-ex-sexp-eval ()
+  "A leading ( evaluates as Emacs Lisp."
+  (aim-test-with-buffer "|x"
+    (aim-mode 1)
+    (defvar aim-test--ex-result nil)
+    (setq aim-test--ex-result nil)
+    ;; kbd treats spaces as separators; SPC spells them explicitly.
+    (aim-test-keys ":(setq SPC aim-test--ex-result SPC 42) RET")
+    (should (equal aim-test--ex-result 42))))
+
+(ert-deftest aim-ex-mx-fallthrough ()
+  "Unrecognized input naming a command runs it like M-x."
+  (aim-test :initial "|x" :keys ":ignore RET" :expect "|x"))
+
+(ert-deftest aim-ex-unknown-command-errors ()
+  (aim-test-with-buffer "|x"
+    (aim-mode 1)
+    (should-error (aim-test-keys ":definitely-not-a-command RET")
+                  :type 'user-error)))
+
 ;;;; Simple commands
 
 (ert-deftest aim-cmd-delete-char ()

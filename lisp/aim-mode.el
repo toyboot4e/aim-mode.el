@@ -35,6 +35,7 @@
 (require 'aim-commands)
 (require 'aim-visual)
 (require 'aim-search)
+(require 'aim-ex)
 
 ;;;; Default bindings
 
@@ -108,7 +109,8 @@
   "g v" #'aim-visual-restore
   "m" #'aim-set-marker
   "/" #'aim-search-forward
-  "?" #'aim-search-backward)
+  "?" #'aim-search-backward
+  ":" #'aim-ex)
 
 (define-keymap :keymap aim-visual-state-map
   "ESC" #'aim-visual-exit
@@ -122,7 +124,8 @@
   "c" #'aim-change
   "y" #'aim-yank
   ">" #'aim-shift-right
-  "<" #'aim-shift-left)
+  "<" #'aim-shift-left
+  ":" #'aim-ex)
 
 (keymap-set aim-insert-state-map "ESC" #'aim-normal-state)
 (keymap-set aim-operator-state-map "ESC" #'keyboard-quit)
