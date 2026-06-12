@@ -517,6 +517,41 @@
   "Plain motions between change and repeat leave the record alone."
   (aim-test :initial "|abcd efg" :keys "xw." :expect "bcd |fg"))
 
+;;;; Keybinding API
+
+(ert-deftest aim-normal-state-does-not-self-insert ()
+  "Unbound printable keys must not edit the buffer in normal State."
+  (aim-test-with-buffer "|abc"
+    (aim-mode 1)
+    (ignore-errors (aim-test-keys "Q"))
+    (should (equal (aim-test-buffer-state) "|abc"))))
+
+(ert-deftest aim-define-key-state-binding ()
+  (unwind-protect
+      (progn
+        (aim-define-key 'normal "Q" #'aim-delete-char)
+        (aim-test-with-buffer "|abc"
+          (aim-mode 1)
+          (aim-test-keys "Q")
+          (should (equal (aim-test-buffer-state) "|bc"))))
+    (keymap-unset aim-normal-state-map "Q" t)))
+
+(ert-deftest aim-define-key-per-mode-binding ()
+  "A per-mode binding applies in that mode (and derived), not elsewhere."
+  (unwind-protect
+      (progn
+        (aim-define-key 'normal "Q" #'aim-delete-char 'text-mode)
+        (aim-test-with-buffer "|abc"
+          (text-mode)
+          (aim-mode 1)
+          (aim-test-keys "Q")
+          (should (equal (aim-test-buffer-state) "|bc")))
+        (aim-test-with-buffer "|abc"
+          (aim-mode 1)
+          (ignore-errors (aim-test-keys "Q"))
+          (should (equal (aim-test-buffer-state) "|abc"))))
+    (remhash '(normal . text-mode) aim--aux-maps)))
+
 ;;;; Replace State
 
 (ert-deftest aim-replace-overwrites ()

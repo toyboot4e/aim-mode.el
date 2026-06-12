@@ -211,6 +211,13 @@ OP-KEYS and OPERATOR as there."
               (when aim--transcript
                 (push keys aim--transcript))
               (cond
+               ;; The doubled key first: its global binding is
+               ;; irrelevant (it may resolve to `undefined' via the
+               ;; self-insert remap).
+               ((equal (key-description keys) (key-description op-keys))
+                (aim--operator-finish-transcript)
+                (throw 'aim--range
+                       (aim--line-range (* op-count (or motion-count 1)))))
                ((memq cmd '(keyboard-quit undefined))
                 (keyboard-quit))
                ((eq cmd 'digit-argument)
@@ -220,10 +227,6 @@ OP-KEYS and OPERATOR as there."
                ;; "0" extends a pending count; otherwise it is a motion.
                ((and motion-count (equal (key-description keys) "0"))
                 (setq motion-count (* motion-count 10)))
-               ((equal (key-description keys) (key-description op-keys))
-                (aim--operator-finish-transcript)
-                (throw 'aim--range
-                       (aim--line-range (* op-count (or motion-count 1)))))
                ((and cmd (get cmd 'aim-text-object))
                 (let ((range (funcall cmd (* op-count (or motion-count 1)))))
                   (aim--operator-finish-transcript)

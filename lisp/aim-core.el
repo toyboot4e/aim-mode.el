@@ -63,6 +63,47 @@ Also serves as the activation variable in `aim--emulation-alist'.")
     (motion . ,aim-motion-state-map))
   "Alist mapping State symbols to their keymaps.")
 
+;; Unbound printable keys must not self-insert outside the editing
+;; States; otherwise a typo in normal State edits the buffer.
+(dolist (map (list aim-normal-state-map aim-operator-state-map
+                   aim-visual-state-map aim-motion-state-map))
+  (define-key map [remap self-insert-command] #'undefined))
+
+;;;; Per-major-mode auxiliary bindings
+
+(defvar aim--aux-maps (make-hash-table :test #'equal)
+  "Keymaps for (STATE . MAJOR-MODE) pairs, written by `aim-define-key'.")
+
+(defun aim--aux-map (state mode &optional create)
+  "The auxiliary keymap for STATE in MODE, or nil.
+CREATE it when missing."
+  (let ((key (cons state mode)))
+    (or (gethash key aim--aux-maps)
+        (and create
+             (puthash key (make-sparse-keymap) aim--aux-maps)))))
+
+(defun aim--current-aux-map (state)
+  "Auxiliary keymap(s) for STATE in the current buffer's major mode.
+Composes the maps of the mode and its parents, nearest mode first."
+  (let (maps)
+    (dolist (mode (derived-mode-all-parents major-mode))
+      (let ((map (aim--aux-map state mode)))
+        (when map (push map maps))))
+    (cond ((null maps) nil)
+          ((null (cdr maps)) (car maps))
+          (t (make-composed-keymap (nreverse maps))))))
+
+(defun aim-define-key (state key def &optional mode)
+  "Bind KEY to DEF in STATE's keymap.
+With MODE, the binding applies only in buffers whose major mode
+derives from MODE, and takes precedence over the State keymap.
+KEY is a `keymap-set' key string."
+  (if mode
+      (keymap-set (aim--aux-map state mode t) key def)
+    (keymap-set (or (alist-get state aim--state-maps)
+                    (error "No such State: %s" state))
+                key def)))
+
 (defvar-local aim--emulation-alist nil
   "Per-buffer entry consulted by `emulation-mode-map-alists'.
 Holds ((aim-state . MAP)) for the current State's map; since
@@ -279,8 +320,10 @@ CHAR is nil when the typed character was appended at end of line.")
       (setq aim--replace-saved nil))
     (setq aim-state state
           aim--emulation-alist
-          (let ((map (alist-get state aim--state-maps)))
-            (and map (list (cons 'aim-state map)))))
+          (let ((map (alist-get state aim--state-maps))
+                (aux (aim--current-aux-map state)))
+            (append (and aux (list (cons 'aim-state aux)))
+                    (and map (list (cons 'aim-state map))))))
     (when (and (memq state editing) (not (memq old editing)))
       (aim--start-undo-session))
     (when (and (eq state 'replace) (not (eq old 'replace)))
@@ -301,6 +344,13 @@ unless at the beginning of a line, mirroring Vim."
   "Enter insert State at point."
   (interactive)
   (aim-switch-state 'insert))
+
+(defun aim--refresh-state ()
+  "Recompute the State keymaps after a major-mode change."
+  (when aim-state
+    (aim-switch-state aim-state)))
+
+(add-hook 'after-change-major-mode-hook #'aim--refresh-state)
 
 (defun aim--disable ()
   "Deactivate aim in the current buffer."
