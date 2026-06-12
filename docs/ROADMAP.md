@@ -27,14 +27,9 @@ Done so far:
 - **0.6** — `/ ? n N *` as isearch glue with Vim wraparound and
   match-start landing; marks `m` `` ` `` `'` over Emacs registers with
   the `` `` `` last-jump mark; `{ } ( ) % H M L C-d C-u` motions.
-
-## 0.7 — Ex Dispatcher
-
-- `:` minibuffer dispatcher (docs/adr/0002): whitelist `w q wq e <line>`
-  and `[range]s/pat/rep/[g]` over numbers/`%`/`.`/`$` ranges, translated
-  to Emacs replace commands.
-- Fallthroughs: leading `(` evaluates as Emacs Lisp; unrecognized input
-  is offered to `M-x`.
+- **0.7** — the Ex Dispatcher: whitelist (`w q q! wq x e <line> $`,
+  `[range]s/pat/rep/[g]`), `(sexp)` evaluation, M-x fallthrough;
+  visual `:s` over the selection.
 
 ## 0.8 — Registers and kmacros
 
