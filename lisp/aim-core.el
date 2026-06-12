@@ -43,10 +43,15 @@ Also serves as the activation variable in `aim--emulation-alist'.")
 (defvar-keymap aim-insert-state-map
   :doc "Bindings active in insert State; unbound keys self-insert.")
 
+(defvar-keymap aim-visual-state-map
+  :doc "Bindings active in visual State."
+  :parent aim-motion-map)
+
 (defvar aim--state-maps
   `((normal . ,aim-normal-state-map)
     (operator-pending . ,aim-operator-state-map)
-    (insert . ,aim-insert-state-map))
+    (insert . ,aim-insert-state-map)
+    (visual . ,aim-visual-state-map))
   "Alist mapping State symbols to their keymaps.")
 
 (defvar-local aim--emulation-alist nil
@@ -130,6 +135,21 @@ Holds ((aim-state . MAP)) for the current State's map; since
     (undo-amalgamate-change-group aim--undo-handle)
     (accept-change-group aim--undo-handle)
     (setq aim--undo-handle nil)))
+
+;;;; Visual selection bookkeeping
+
+(defvar-local aim--visual-kind 'char
+  "Kind of the visual selection: `char' or `line'.")
+
+(defvar-local aim--last-visual nil
+  "Last visual selection, as (MARK POINT KIND), for `gv'.")
+
+(defun aim--visual-leave ()
+  "Leave visual State for normal State, remembering the selection."
+  (when (eq aim-state 'visual)
+    (setq aim--last-visual (list (mark) (point) aim--visual-kind)))
+  (deactivate-mark)
+  (aim-switch-state 'normal))
 
 ;;;; State switching
 

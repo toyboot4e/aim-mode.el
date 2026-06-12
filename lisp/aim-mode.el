@@ -33,6 +33,7 @@
 (require 'aim-text-objects)
 (require 'aim-operators)
 (require 'aim-commands)
+(require 'aim-visual)
 
 ;;;; Default bindings
 
@@ -85,7 +86,24 @@
   "A" #'aim-append-line
   "I" #'aim-insert-line
   "o" #'aim-open-below
-  "O" #'aim-open-above)
+  "O" #'aim-open-above
+  "v" #'aim-visual-char
+  "V" #'aim-visual-line
+  "g v" #'aim-visual-restore)
+
+(define-keymap :keymap aim-visual-state-map
+  "ESC" #'aim-visual-exit
+  "v" #'aim-visual-char
+  "V" #'aim-visual-line
+  "o" #'aim-visual-exchange
+  "i" #'aim-visual-object
+  "a" #'aim-visual-object
+  "d" #'aim-delete
+  "x" #'aim-delete
+  "c" #'aim-change
+  "y" #'aim-yank
+  ">" #'aim-shift-right
+  "<" #'aim-shift-left)
 
 (keymap-set aim-insert-state-map "ESC" #'aim-normal-state)
 (keymap-set aim-operator-state-map "ESC" #'keyboard-quit)

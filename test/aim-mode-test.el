@@ -342,6 +342,48 @@
 (ert-deftest aim-cmd-join-lines-count ()
   (aim-test :initial "|a\nb\nc\nd\n" :keys "3J" :expect "a b| c\nd\n"))
 
+;;;; Visual State
+
+(ert-deftest aim-visual-char-delete ()
+  (aim-test :initial "|abcdef" :keys "vlld" :expect "|def"))
+
+(ert-deftest aim-visual-char-yank-paste ()
+  (aim-test :initial "|abc" :keys "vlyp" :expect "aa|bbc"))
+
+(ert-deftest aim-visual-line-delete ()
+  (aim-test :initial "a\n|bcd\ne\n" :keys "Vd" :expect "a\n|e\n"))
+
+(ert-deftest aim-visual-line-extend-delete ()
+  (aim-test :initial "|a\nb\nc\n" :keys "Vjd" :expect "|c\n"))
+
+(ert-deftest aim-visual-char-across-lines ()
+  (aim-test :initial "ab|c\ndef\n" :keys "vjd" :expect "ab|\n"))
+
+(ert-deftest aim-visual-exchange-ends ()
+  "o swaps the ends, so h extends the selection backward."
+  (aim-test :initial "a|bcd" :keys "vlohd" :expect "|d"))
+
+(ert-deftest aim-visual-escape-leaves-selection ()
+  (aim-test :initial "a|bc" :keys "vl ESC x" :expect "ab|"))
+
+(ert-deftest aim-visual-restore-gv ()
+  (aim-test :initial "a|bcd" :keys "vl ESC gvd" :expect "a|d"))
+
+(ert-deftest aim-visual-inner-word-object ()
+  (aim-test :initial "he|llo world" :keys "viwd" :expect "| world"))
+
+(ert-deftest aim-visual-inner-paren-object ()
+  (aim-test :initial "(a|bc)" :keys "vibd" :expect "(|)"))
+
+(ert-deftest aim-visual-paragraph-object ()
+  (aim-test :initial "a\nb|\nc\n\nd\n" :keys "vipd" :expect "|\nd\n"))
+
+(ert-deftest aim-visual-change ()
+  (aim-test :initial "|abc def" :keys "vllcxy ESC" :expect "x|y def"))
+
+(ert-deftest aim-visual-shift ()
+  (aim-test :initial "|a\nb\nc\n" :keys "Vj>" :expect "    |a\n    b\nc\n"))
+
 ;;;; Repeat
 
 (ert-deftest aim-repeat-delete-char ()

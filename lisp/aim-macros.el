@@ -173,12 +173,31 @@ before the first non-blank of its line."
 
 ;;;; Operator-pending State
 
+(defun aim--visual-range ()
+  "Range (BEG END TYPE) of the active visual selection."
+  (let ((m (or (mark) (user-error "No selection")))
+        (p (point)))
+    (if (eq aim--visual-kind 'line)
+        (aim--expand-range (min m p) (max m p) 'linewise)
+      ;; Charwise selections include the character at their far end.
+      (list (min m p) (min (1+ (max m p)) (point-max)) 'exclusive))))
+
 (defun aim--operator-range (op-keys &optional operator)
-  "Read a motion in operator-pending State and return (BEG END TYPE).
-OP-KEYS is the key sequence that invoked the operator; pressing it
-again selects whole lines.  Counts given to the operator and to the
-motion multiply, as in Vim (`2d3w' acts on six words).  OPERATOR is
-the operator command symbol, used for its motion substitutions."
+  "Return (BEG END TYPE) for an operator: the selection or a read motion.
+In visual State, the selection is the range and visual State ends.
+Otherwise a motion is read in operator-pending State: OP-KEYS is the
+key sequence that invoked the operator; pressing it again selects
+whole lines.  Counts given to the operator and to the motion
+multiply, as in Vim (`2d3w' acts on six words).  OPERATOR is the
+operator command symbol, used for its motion substitutions."
+  (if (eq aim-state 'visual)
+      (prog1 (aim--visual-range)
+        (aim--visual-leave))
+    (aim--operator-read-range op-keys operator)))
+
+(defun aim--operator-read-range (op-keys operator)
+  "Read a motion in operator-pending State; see `aim--operator-range'.
+OP-KEYS and OPERATOR as there."
   (let ((op-count (prefix-numeric-value current-prefix-arg))
         (had-count current-prefix-arg)
         (motion-count nil)
