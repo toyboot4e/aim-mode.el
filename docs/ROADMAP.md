@@ -17,15 +17,9 @@ Done so far:
   recording, operator transcripts) as a Kernel layer between core and
   macros; Vim's exclusive-motion adjustment rules; `cw` as `ce`; sticky
   goal column; `cc` keeps indent; `D C Y r ~ J`, `>` `<`, `;` `,`.
-
-## 0.4 — Text objects
-
-- `aim-define-text-object` macro; `i`/`a` readable in operator-pending
-  State (`diw`, `ci(`, `da"` ...).
-- Objects: `w W`, `( ) b`, `[ ]`, `{ } B`, `' "` backtick, `p` paragraph,
-  `t` tag (stretch).
-- Word motions consult the syntax table (retires the `iskeyword` caveat).
-- `W B E` WORD motions.
+- **0.4** — `aim-define-text-object` macro and the i/a objects (word,
+  WORD, pairs, quotes, paragraph); syntax-table word vocabulary;
+  `W B E` motions. (`t` tag objects deferred.)
 
 ## 0.5 — Visual States (char + line)
 

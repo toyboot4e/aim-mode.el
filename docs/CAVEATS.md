@@ -51,9 +51,9 @@ treatment lands in **0.9**.
 register types (so a charwise kill ending in `\n` pastes charwise)
 arrive with the register layer in **0.8**.
 
-### Word motions ignore the syntax table
+### Pair and quote objects are context-blind
 
-Word characters are hard-coded as `[:alnum:]_` instead of consulting the
-buffer's syntax table / anything like Vim's `iskeyword`. Noticeable in
-e.g. Lisp modes where `-` is part of symbols. Revisit with text objects
-in **0.4**.
+`i(`/`a"`-style objects scan characters directly: escaped characters
+(`\"`) and pairs inside strings or comments are not recognized as
+special. Syntax-aware scanning can come with later polish; no milestone
+committed yet.
