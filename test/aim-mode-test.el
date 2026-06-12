@@ -69,6 +69,14 @@
 (ert-deftest aim-motion-k-keeps-column ()
   (aim-test :initial "abc\nde|f\n" :keys "k" :expect "ab|c\ndef\n"))
 
+(ert-deftest aim-motion-j-sticky-goal-column ()
+  "The goal column survives travelling through a short line."
+  (aim-test :initial "abc|d\nx\nlmnop\n" :keys "jj" :expect "abcd\nx\nlmn|op\n"))
+
+(ert-deftest aim-motion-goal-column-resets ()
+  "An intervening motion resets the goal column."
+  (aim-test :initial "abc|d\nx\nlmnop\n" :keys "jhj" :expect "abcd\nx\n|lmnop\n"))
+
 (ert-deftest aim-motion-line-beginning ()
   (aim-test :initial "abc |def" :keys "0" :expect "|abc def"))
 

@@ -27,19 +27,29 @@
   "Move COUNT characters right, stopping at the end of the line."
   (goto-char (min (line-end-position) (+ (point) count))))
 
-(aim-define-motion aim-next-line (count)
-  "Move COUNT lines down, keeping the column when possible."
-  :type linewise
-  (let ((col (current-column)))
+(defvar aim--goal-column nil
+  "Column a `j'/`k' run started from, kept across short lines.")
+
+(defun aim--line-move (count)
+  "Move COUNT lines (negative for up), keeping the goal column.
+Consecutive `j'/`k' presses remember the column the run started
+from, so travelling through a short line does not lose it."
+  (let ((col (if (memq last-command '(aim-next-line aim-previous-line))
+                 (or aim--goal-column (current-column))
+               (current-column))))
+    (setq aim--goal-column col)
     (forward-line count)
     (move-to-column col)))
 
-(aim-define-motion aim-previous-line (count)
-  "Move COUNT lines up, keeping the column when possible."
+(aim-define-motion aim-next-line (count)
+  "Move COUNT lines down, keeping the goal column."
   :type linewise
-  (let ((col (current-column)))
-    (forward-line (- count))
-    (move-to-column col)))
+  (aim--line-move count))
+
+(aim-define-motion aim-previous-line (count)
+  "Move COUNT lines up, keeping the goal column."
+  :type linewise
+  (aim--line-move (- count)))
 
 (aim-define-motion aim-line-beginning (_count)
   "Move to the beginning of the line."
