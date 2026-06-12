@@ -1,12 +1,5 @@
 ;;; aim-test-utils.el --- Declarative test harness for aim-mode  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2026 toyboot4e
-
-;; Author: toyboot4e <toyboot4e@gmail.com>
-;; SPDX-License-Identifier: CC0-1.0
-
-;; This file is part of aim-mode.
-
 ;;; Commentary:
 
 ;; The declarative buffer harness: a test states initial buffer text with

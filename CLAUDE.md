@@ -21,7 +21,10 @@ subsystems underneath; a small layered Kernel with orthogonal Leaves.
 - Every editing command is defined via the `aim-define-*` macros once they
   exist; raw `defun` commands are second-class (no repeat/count support).
 - All elisp files: lexical binding, `aim-` public / `aim--` private naming,
-  checkdoc-clean docstrings, CC0-1.0 SPDX headers.
+  checkdoc-clean docstrings. Copyright/license header lives in
+  `lisp/aim-mode.el` ONLY (CC0-1.0); every other file keeps the minimal
+  skeleton (first-line summary, Commentary, Code, provide, ends-here) —
+  no Copyright/Author/SPDX boilerplate.
 - License is CC0-1.0, NOT GPL: never copy code from GPL projects (evil,
   Emacs internals, GPL packages). Reading them for architecture and ideas
   is fine; reproducing their code is a license violation (docs/adr/0004).

@@ -1,12 +1,5 @@
 ;;; aim-core.el --- States and keymap machinery for aim-mode  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2026 toyboot4e
-
-;; Author: toyboot4e <toyboot4e@gmail.com>
-;; SPDX-License-Identifier: CC0-1.0
-
-;; This file is part of aim-mode.
-
 ;;; Commentary:
 
 ;; The bottom layer of the aim-mode Kernel: State definitions and keymap

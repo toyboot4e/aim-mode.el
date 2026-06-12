@@ -1,12 +1,5 @@
 ;;; aim-mode-test.el --- Milestone 0.1 smoke tests  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2026 toyboot4e
-
-;; Author: toyboot4e <toyboot4e@gmail.com>
-;; SPDX-License-Identifier: CC0-1.0
-
-;; This file is part of aim-mode.
-
 ;;; Commentary:
 
 ;; Smoke tests proving the pipeline: the harness drives a buffer through
