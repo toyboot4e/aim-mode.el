@@ -91,6 +91,62 @@ Linewise text (ending in a newline) goes above the current line."
       (dotimes (_ count) (insert text))
       (backward-char))))
 
+(aim-define-command aim-kill-line-rest (count)
+  "Kill to the end of the line, COUNT - 1 lines below (Vim's D)."
+  :interactive "p"
+  (kill-region (point) (line-end-position count)))
+
+(aim-define-command aim-change-line-rest (count)
+  "Change to the end of the line, COUNT - 1 lines below (Vim's C).
+The kill and the following insertion form a single undo step."
+  :interactive "p"
+  (aim--start-undo-session)
+  (kill-region (point) (line-end-position count))
+  (aim-switch-state 'insert))
+
+(aim-define-command aim-copy-line (count)
+  "Copy COUNT whole lines into the kill-ring (Vim's Y, which is yy)."
+  :interactive "p"
+  (copy-region-as-kill (line-beginning-position)
+                       (line-beginning-position (1+ count))))
+
+(aim-define-command aim-replace-char (count)
+  "Replace COUNT characters after point with the next typed character.
+Fails without changing anything when the line is too short, like Vim."
+  :interactive "p"
+  (let ((ch (aim--read-char "r-")))
+    (when (> (+ (point) count) (line-end-position))
+      (user-error "Not enough characters on the line"))
+    (delete-region (point) (+ (point) count))
+    (insert (make-string count ch))
+    (backward-char)))
+
+(aim-define-command aim-invert-char-case (count)
+  "Toggle the case of COUNT characters, moving right past them."
+  :interactive "p"
+  (let* ((end (min (line-end-position) (+ (point) count)))
+         (text (buffer-substring (point) end)))
+    (delete-region (point) end)
+    (insert (mapconcat (lambda (c)
+                         (char-to-string
+                          (cond ((eq c (upcase c)) (downcase c))
+                                (t (upcase c)))))
+                       text))))
+
+(aim-define-command aim-join-lines (count)
+  "Join COUNT lines (at least two) with a single space, like Vim's J.
+Point ends on the joining space."
+  :interactive "p"
+  (dotimes (_ (max 1 (1- (max count 2))))
+    (goto-char (line-end-position))
+    (unless (eobp)
+      (let ((here (point)))
+        (forward-char)
+        (skip-chars-forward " \t")
+        (delete-region here (point))
+        (insert " ")
+        (backward-char)))))
+
 ;;;; Undo
 
 (defun aim-undo (count)

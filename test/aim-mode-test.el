@@ -210,6 +210,37 @@
 (ert-deftest aim-cmd-open-above ()
   (aim-test :initial "abc\n|def\n" :keys "Ox ESC" :expect "abc\n|x\ndef\n"))
 
+(ert-deftest aim-cmd-kill-line-rest ()
+  (aim-test :initial "ab|cdef" :keys "D" :expect "ab|"))
+
+(ert-deftest aim-cmd-change-line-rest ()
+  (aim-test :initial "ab|cdef" :keys "CX ESC" :expect "ab|X"))
+
+(ert-deftest aim-cmd-copy-line ()
+  (aim-test :initial "|abc\n" :keys "Yp" :expect "abc\n|abc\n"))
+
+(ert-deftest aim-cmd-replace-char ()
+  (aim-test :initial "|abc" :keys "rx" :expect "|xbc"))
+
+(ert-deftest aim-cmd-replace-char-count ()
+  (aim-test :initial "|abcd" :keys "3rx" :expect "xx|xd"))
+
+(ert-deftest aim-cmd-replace-char-too-short ()
+  "r past the end of the line errors without changing anything."
+  (aim-test-with-buffer "ab|cd"
+    (aim-mode 1)
+    (should-error (aim-test-keys "9rx") :type 'user-error)
+    (should (equal (aim-test-buffer-state) "ab|cd"))))
+
+(ert-deftest aim-cmd-invert-case ()
+  (aim-test :initial "|aBc" :keys "2~" :expect "Ab|c"))
+
+(ert-deftest aim-cmd-join-lines ()
+  (aim-test :initial "ab|c\n  def\n" :keys "J" :expect "abc| def\n"))
+
+(ert-deftest aim-cmd-join-lines-count ()
+  (aim-test :initial "|a\nb\nc\nd\n" :keys "3J" :expect "a b| c\nd\n"))
+
 ;;;; Repeat
 
 (ert-deftest aim-repeat-delete-char ()
@@ -230,6 +261,10 @@
 (ert-deftest aim-repeat-find-char-argument ()
   "The character read by f is part of the repeat record."
   (aim-test :initial "|axbxc" :keys "dfx." :expect "|c"))
+
+(ert-deftest aim-repeat-replace-char-argument ()
+  "The character read by r is part of the repeat record."
+  (aim-test :initial "|abcd" :keys "rxl." :expect "x|xcd"))
 
 (ert-deftest aim-repeat-insert-session ()
   "Repeat replays an entire insert session's keystrokes."

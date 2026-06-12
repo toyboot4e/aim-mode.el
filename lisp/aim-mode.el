@@ -63,6 +63,12 @@
   "x" #'aim-delete-char
   "p" #'aim-paste-after
   "P" #'aim-paste-before
+  "D" #'aim-kill-line-rest
+  "C" #'aim-change-line-rest
+  "Y" #'aim-copy-line
+  "r" #'aim-replace-char
+  "~" #'aim-invert-char-case
+  "J" #'aim-join-lines
   "u" #'aim-undo
   "C-r" #'aim-redo
   "." #'aim-repeat
