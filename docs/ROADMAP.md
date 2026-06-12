@@ -33,16 +33,12 @@ Done so far:
 - **0.8** — typed kills (char/line text property; paste stops
   guessing), `"a`–`"z` over Emacs registers, visual `p` over the
   selection, `q`/`@` kmacro glue with `@@` and counts.
-
-## 0.9 — Remaining States and integration
-
-- Visual block (`C-v`) on rectangle functions — every operator grows a
-  blockwise case.
-- Replace State (`R`) over `overwrite-mode` with backspace-restore.
-- Motion State for read-only contexts.
-- `aim-define-key` with per-major-mode auxiliary keymaps; first curated
-  `aim-x-*.el` Leaves (normal State everywhere needs them).
-- Terminal ESC via `input-decode-map` timeout (retires the Meta caveat).
+- **0.9** — replace State (backspace-restore, repeat, one undo step);
+  motion State; `aim-define-key` with per-major-mode auxiliary
+  keymaps (and normal State no longer self-inserts unbound keys);
+  visual block with block-typed kills/paste; instant terminal ESC via
+  an `input-decode-map` filter. Curated `aim-x-*.el` modules deferred
+  until concrete per-mode preferences exist.
 
 ## 1.0 — Common Core completeness
 

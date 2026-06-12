@@ -51,12 +51,12 @@ from a trailing newline. Inherent to sharing the kill-ring
 register does not enter the repeat record. Fix when repeat learns about
 prefix state; no milestone committed yet.
 
-### Terminal Meta chords shadowed in insert State
+### Block change does not replicate insertion
 
-`ESC` is bound as a raw character, so in `-nw` Emacs (where `M-x` arrives
-as `ESC x`) Meta chords are shadowed in insert and operator-pending
-States. GUI Emacs is unaffected. The `input-decode-map` timeout
-treatment lands in **0.9**.
+`c` on a block selection deletes the rectangle and inserts on the first
+line only; Vim replays the insertion on every line of the block when
+leaving insert. Paste over a block selection is also unsupported.
+Planned for the 1.0 completeness pass.
 
 ### Pair and quote objects are context-blind
 

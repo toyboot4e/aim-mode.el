@@ -4,7 +4,7 @@
 
 ;; Author: toyboot4e <toyboot4e@gmail.com>
 ;; Maintainer: toyboot4e <toyboot4e@gmail.com>
-;; Version: 0.8.0
+;; Version: 0.9.0
 ;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: emulations
 ;; URL: https://github.com/toyboot4e/aim-mode.el
@@ -189,7 +189,8 @@ This is the entry point used by `nix run'."
   (let ((buffer (get-buffer-create "*aim-playground*")))
     (with-current-buffer buffer
       (when (zerop (buffer-size))
-        (insert "aim-mode playground -- Milestone 0.8 (registers and macros)\n"
+        (insert "aim-mode playground -- Milestone 0.9 (all six states)\n"
+                "States: v V C-v visual, R replace, i insert; ESC leaves.\n"
                 "Registers: \"ayy \"ap; macros: qa...q @a @@.\n"
                 "Motions: h j k l w b e W B E 0 ^ $ gg G f F t T ; , { } ( ) %.\n"
                 "Search: / ? n N *; marks: m a ... `a 'a, `` bounces.\n"
