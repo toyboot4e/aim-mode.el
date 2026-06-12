@@ -135,9 +135,13 @@
   "p" #'aim-visual-paste
   "\"" #'aim-use-register)
 
-(keymap-set aim-insert-state-map "ESC" #'aim-normal-state)
-(keymap-set aim-operator-state-map "ESC" #'keyboard-quit)
-(keymap-set aim-replace-state-map "ESC" #'aim-normal-state)
+;; Both the raw ESC character and the <escape> event (GUI frames, and
+;; ttys via the input-decode filter) must be bound.
+(dolist (key '("ESC" "<escape>"))
+  (keymap-set aim-insert-state-map key #'aim-normal-state)
+  (keymap-set aim-operator-state-map key #'keyboard-quit)
+  (keymap-set aim-replace-state-map key #'aim-normal-state)
+  (keymap-set aim-visual-state-map key #'aim-visual-exit))
 (keymap-set aim-replace-state-map "DEL" #'aim-replace-backspace)
 
 ;; Text objects, read in operator-pending State.

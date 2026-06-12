@@ -236,6 +236,39 @@ text killed outside aim-mode."
   "Remember point as the position before a jump."
   (setq aim--last-jump (point-marker)))
 
+;;;; Terminal ESC
+;; On a tty, ESC is also the lead byte of Meta chords and function-key
+;; sequences.  An `input-decode-map' filter waits `aim-esc-delay' for a
+;; following byte: alone it becomes the <escape> event (so leaving
+;; insert State is instant), otherwise normal decoding proceeds and
+;; Meta chords work.  GUI frames and batch mode are untouched.
+
+(defcustom aim-esc-delay 0.01
+  "Seconds to wait for a byte following ESC on a tty."
+  :type 'number)
+
+(defun aim--esc-filter (map)
+  "Translate a lone ESC to <escape>; pass MAP through otherwise."
+  (if (and (equal (this-single-command-keys) [?\e])
+           (sit-for aim-esc-delay))
+      [escape]
+    map))
+
+(defun aim--setup-terminal-esc (&optional frame)
+  "Install the ESC filter on FRAME's terminal when it is a tty."
+  (with-selected-frame (or frame (selected-frame))
+    (let ((term (frame-terminal)))
+      (when (and (eq (terminal-live-p term) t)
+                 (not (terminal-parameter term 'aim--esc)))
+        (set-terminal-parameter term 'aim--esc t)
+        (let ((prev (lookup-key input-decode-map [?\e])))
+          (define-key input-decode-map [?\e]
+                      `(menu-item "" ,prev :filter ,#'aim--esc-filter)))))))
+
+(unless noninteractive
+  (aim--setup-terminal-esc)
+  (add-hook 'after-make-frame-functions #'aim--setup-terminal-esc))
+
 ;;;; Cursor
 
 (defcustom aim-state-cursors
