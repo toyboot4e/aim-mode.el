@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'aim-core)
+(require 'aim-repeat)
 (require 'aim-macros)
 (require 'aim-motions)
 (require 'aim-operators)
@@ -64,6 +65,7 @@
   "P" #'aim-paste-before
   "u" #'aim-undo
   "C-r" #'aim-redo
+  "." #'aim-repeat
   "i" #'aim-insert
   "a" #'aim-append
   "A" #'aim-append-line

@@ -130,7 +130,7 @@ falls out of the exclusive-motion adjustment rules in
   "Search for the next typed character COUNT times on this line.
 Move FORWARD or backward onto the found character; signal
 `user-error' without moving when the character is absent."
-  (let ((ch (char-to-string (read-char (if forward "f-" "F-"))))
+  (let ((ch (char-to-string (aim--read-char (if forward "f-" "F-"))))
         (start (point))
         (case-fold-search nil))
     (condition-case nil

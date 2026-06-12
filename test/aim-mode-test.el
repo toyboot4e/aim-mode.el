@@ -210,6 +210,39 @@
 (ert-deftest aim-cmd-open-above ()
   (aim-test :initial "abc\n|def\n" :keys "Ox ESC" :expect "abc\n|x\ndef\n"))
 
+;;;; Repeat
+
+(ert-deftest aim-repeat-delete-char ()
+  (aim-test :initial "|abcd" :keys "x." :expect "|cd"))
+
+(ert-deftest aim-repeat-reuses-count ()
+  (aim-test :initial "|abcdef" :keys "2x." :expect "|ef"))
+
+(ert-deftest aim-repeat-count-override ()
+  (aim-test :initial "|abcdef" :keys "3x2." :expect "|f"))
+
+(ert-deftest aim-repeat-operator-motion ()
+  (aim-test :initial "|aa bb cc dd" :keys "dw." :expect "|cc dd"))
+
+(ert-deftest aim-repeat-doubled-operator ()
+  (aim-test :initial "|a\nb\nc\nd\n" :keys "dd." :expect "|c\nd\n"))
+
+(ert-deftest aim-repeat-find-char-argument ()
+  "The character read by f is part of the repeat record."
+  (aim-test :initial "|axbxc" :keys "dfx." :expect "|c"))
+
+(ert-deftest aim-repeat-insert-session ()
+  "Repeat replays an entire insert session's keystrokes."
+  (aim-test :initial "|abc" :keys "ihi ESC ." :expect "hh|iiabc"))
+
+(ert-deftest aim-repeat-change ()
+  "Repeat replays a change operator with its typed replacement."
+  (aim-test :initial "|aa bb cc" :keys "ceXX ESC w ." :expect "XX X|X cc"))
+
+(ert-deftest aim-repeat-motions-do-not-clobber ()
+  "Plain motions between change and repeat leave the record alone."
+  (aim-test :initial "|abcd efg" :keys "xw." :expect "bcd |fg"))
+
 ;;;; Undo
 
 (ert-deftest aim-undo-delete-line ()

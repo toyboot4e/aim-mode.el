@@ -4,8 +4,9 @@
 
 ;; Leaf module: normal-State commands that are not operator + motion
 ;; compositions — insert-State entries, x, paste, and undo glue
-;; (docs/adr/0002).  These are plain commands for now; they migrate to
-;; the definition macros when the repeat layer lands.
+;; (docs/adr/0002).  All editing commands are defined through
+;; `aim-define-command' so `.' can repeat them; undo/redo stay plain
+;; commands because Vim's `.' does not repeat undo.
 ;;
 ;; Paste decides between charwise and linewise from the killed text: a
 ;; trailing newline means linewise.  This approximates Vim's register
@@ -13,43 +14,37 @@
 
 ;;; Code:
 
-(require 'aim-core)
+(require 'aim-macros)
 
 ;;;; Insert-State entries
 
-(defun aim-insert ()
+(aim-define-command aim-insert ()
   "Enter insert State at point."
-  (interactive)
   (aim-switch-state 'insert))
 
-(defun aim-append ()
+(aim-define-command aim-append ()
   "Enter insert State after the character at point."
-  (interactive)
   (unless (eolp) (forward-char))
   (aim-switch-state 'insert))
 
-(defun aim-append-line ()
+(aim-define-command aim-append-line ()
   "Enter insert State at the end of the line."
-  (interactive)
   (goto-char (line-end-position))
   (aim-switch-state 'insert))
 
-(defun aim-insert-line ()
+(aim-define-command aim-insert-line ()
   "Enter insert State at the first non-blank character of the line."
-  (interactive)
   (back-to-indentation)
   (aim-switch-state 'insert))
 
-(defun aim-open-below ()
+(aim-define-command aim-open-below ()
   "Open a line below and enter insert State."
-  (interactive)
   (goto-char (line-end-position))
   (aim-switch-state 'insert)
   (insert "\n"))
 
-(defun aim-open-above ()
+(aim-define-command aim-open-above ()
   "Open a line above and enter insert State."
-  (interactive)
   (forward-line 0)
   (aim-switch-state 'insert)
   (insert "\n")
@@ -57,17 +52,17 @@
 
 ;;;; Editing
 
-(defun aim-delete-char (count)
+(aim-define-command aim-delete-char (count)
   "Kill COUNT characters after point, staying on the current line."
-  (interactive "p")
+  :interactive "p"
   (let ((end (min (line-end-position) (+ (point) count))))
     (when (< (point) end)
       (kill-region (point) end))))
 
-(defun aim-paste-after (count)
+(aim-define-command aim-paste-after (count)
   "Paste the latest kill COUNT times after point.
 Linewise text (ending in a newline) goes below the current line."
-  (interactive "p")
+  :interactive "p"
   (let ((text (current-kill 0)))
     (if (string-suffix-p "\n" text)
         (progn
@@ -81,10 +76,10 @@ Linewise text (ending in a newline) goes below the current line."
       (dotimes (_ count) (insert text))
       (backward-char))))
 
-(defun aim-paste-before (count)
+(aim-define-command aim-paste-before (count)
   "Paste the latest kill COUNT times before point.
 Linewise text (ending in a newline) goes above the current line."
-  (interactive "p")
+  :interactive "p"
   (let ((text (current-kill 0)))
     (if (string-suffix-p "\n" text)
         (progn
