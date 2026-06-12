@@ -27,4 +27,6 @@ below it, so an upward `require` fails the build.
 
 ## License
 
-GPL-3.0-or-later.
+CC0-1.0 (public-domain dedication). Because aim-mode is not GPL, no code is
+ever copied from GPL projects (evil, Emacs itself) — architecture and ideas
+only; see docs/adr/0004.

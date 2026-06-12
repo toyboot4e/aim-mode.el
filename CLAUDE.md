@@ -21,7 +21,10 @@ subsystems underneath; a small layered Kernel with orthogonal Leaves.
 - Every editing command is defined via the `aim-define-*` macros once they
   exist; raw `defun` commands are second-class (no repeat/count support).
 - All elisp files: lexical binding, `aim-` public / `aim--` private naming,
-  checkdoc-clean docstrings, GPL-3.0-or-later headers.
+  checkdoc-clean docstrings, CC0-1.0 SPDX headers.
+- License is CC0-1.0, NOT GPL: never copy code from GPL projects (evil,
+  Emacs internals, GPL packages). Reading them for architecture and ideas
+  is fine; reproducing their code is a license violation (docs/adr/0004).
 
 ## Workflow
 

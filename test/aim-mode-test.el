@@ -3,7 +3,7 @@
 ;; Copyright (C) 2026 toyboot4e
 
 ;; Author: toyboot4e <toyboot4e@gmail.com>
-;; SPDX-License-Identifier: GPL-3.0-or-later
+;; SPDX-License-Identifier: CC0-1.0
 
 ;; This file is part of aim-mode.
 

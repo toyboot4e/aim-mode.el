@@ -8,7 +8,7 @@
 ;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: emulations
 ;; URL: https://github.com/toyboot4e/aim-mode.el
-;; SPDX-License-Identifier: GPL-3.0-or-later
+;; SPDX-License-Identifier: CC0-1.0
 
 ;;; Commentary:
 
