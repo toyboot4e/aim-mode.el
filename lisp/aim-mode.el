@@ -4,7 +4,7 @@
 
 ;; Author: toyboot4e <toyboot4e@gmail.com>
 ;; Maintainer: toyboot4e <toyboot4e@gmail.com>
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: emulations
 ;; URL: https://github.com/toyboot4e/aim-mode.el
@@ -16,21 +16,83 @@
 ;; subsystems underneath.  See CONTEXT.md for the project glossary and
 ;; docs/adr/ for the architecture decisions.
 ;;
-;; Milestone 0.1 is the tooling milestone: this file is a stub that
-;; proves the compile/test/lint/run pipeline end to end.
+;; This umbrella file wires the Kernel and the Leaves together and owns
+;; all default keybindings.
+;;
+;; Known limitation: ESC is bound as a raw character, so Meta chords
+;; typed as ESC-prefixed sequences (terminal Emacs) are shadowed in
+;; insert State.  The `input-decode-map' treatment comes in a later
+;; Milestone.
 
 ;;; Code:
 
 (require 'aim-core)
+(require 'aim-macros)
+(require 'aim-motions)
+(require 'aim-operators)
+(require 'aim-commands)
+
+;;;; Default bindings
+
+(define-keymap :keymap aim-motion-map
+  "h" #'aim-backward-char
+  "l" #'aim-forward-char
+  "j" #'aim-next-line
+  "k" #'aim-previous-line
+  "w" #'aim-forward-word-begin
+  "b" #'aim-backward-word-begin
+  "e" #'aim-forward-word-end
+  "0" #'aim-line-beginning
+  "^" #'aim-first-non-blank
+  "$" #'aim-line-end
+  "g g" #'aim-goto-first-line
+  "G" #'aim-goto-line
+  "f" #'aim-find-char
+  "F" #'aim-find-char-backward
+  "t" #'aim-find-char-to
+  "T" #'aim-find-char-to-backward)
+
+(dotimes (i 9)
+  (keymap-set aim-motion-map (number-to-string (1+ i)) #'digit-argument))
+
+(define-keymap :keymap aim-normal-state-map
+  "d" #'aim-delete
+  "c" #'aim-change
+  "y" #'aim-yank
+  "x" #'aim-delete-char
+  "p" #'aim-paste-after
+  "P" #'aim-paste-before
+  "u" #'aim-undo
+  "C-r" #'aim-redo
+  "i" #'aim-insert
+  "a" #'aim-append
+  "A" #'aim-append-line
+  "I" #'aim-insert-line
+  "o" #'aim-open-below
+  "O" #'aim-open-above)
+
+(keymap-set aim-insert-state-map "ESC" #'aim-normal-state)
+(keymap-set aim-operator-state-map "ESC" #'keyboard-quit)
+
+;;;; Minor mode
 
 ;;;###autoload
 (define-minor-mode aim-mode
-  "Toggle aim-mode in the current buffer.
+  "Toggle aim-mode in the current buffer."
+  :lighter (:eval (format " aim[%s]"
+                          (or (alist-get aim-state aim--state-tags) "-")))
+  (if aim-mode
+      (aim-switch-state 'normal)
+    (aim--disable)))
 
-Milestone 0.1 stub: enabling the mode only tracks `aim-state';
-no keybindings are installed yet."
-  :lighter (:eval (format " aim[%s]" (or aim-state "-")))
-  (setq aim-state (and aim-mode 'normal)))
+;;;###autoload
+(define-globalized-minor-mode aim-global-mode aim-mode aim--turn-on
+  :group 'aim)
+
+(defun aim--turn-on ()
+  "Enable `aim-mode' except in the minibuffer."
+  (unless (or aim-mode (minibufferp))
+    (aim-mode 1)))
 
 ;;;###autoload
 (defun aim-playground ()
@@ -41,8 +103,9 @@ This is the entry point used by `nix run'."
   (let ((buffer (get-buffer-create "*aim-playground*")))
     (with-current-buffer buffer
       (when (zerop (buffer-size))
-        (insert "aim-mode playground -- Milestone 0.1 (tooling)\n"
-                "aim-mode is enabled here, but installs no keybindings yet.\n\n"))
+        (insert "aim-mode playground -- Milestone 0.2 (Kernel tracer bullet)\n"
+                "Try: h j k l w b e 0 ^ $ gg G f t / d c y with counts,\n"
+                "dd yy p P x u, and i a A I o O with ESC.\n"))
       (text-mode)
       (aim-mode 1))
     (pop-to-buffer buffer)))

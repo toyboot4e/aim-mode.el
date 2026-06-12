@@ -25,16 +25,18 @@ the command loop driven by `execute-kbd-macro' acts on the selected
 window's buffer, not merely on `current-buffer'."
   (declare (indent 1) (debug t))
   (let ((buffer (gensym "buffer")))
-    `(let ((,buffer (generate-new-buffer " *aim-test*")))
+    `(let ((,buffer (generate-new-buffer "*aim-test*")))
        (unwind-protect
            (progn
              (set-window-buffer (selected-window) ,buffer)
              (with-current-buffer ,buffer
+               (buffer-enable-undo)
                (insert ,initial)
                (goto-char (point-min))
                (if (search-forward "|" nil t)
                    (delete-char -1)
                  (goto-char (point-max)))
+               (undo-boundary)
                ,@body))
          (kill-buffer ,buffer)))))
 
@@ -48,11 +50,13 @@ window's buffer, not merely on `current-buffer'."
           "|"
           (buffer-substring-no-properties (point) (point-max))))
 
-(cl-defmacro aim-test (&key initial keys expect)
+(cl-defmacro aim-test (&key initial keys expect (aim t))
   "Assert that feeding KEYS to a buffer of INITIAL yields EXPECT.
 INITIAL and EXPECT use `|' to mark point; KEYS is a `kbd' string,
-or nil to test INITIAL parsing alone."
+or nil to test INITIAL parsing alone.  `aim-mode' is enabled unless
+AIM is nil."
   `(aim-test-with-buffer ,initial
+     (when ,aim (aim-mode 1))
      (when ,keys (aim-test-keys ,keys))
      (should (equal (aim-test-buffer-state) ,expect))))
 

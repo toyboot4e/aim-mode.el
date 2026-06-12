@@ -6,7 +6,7 @@ stage := ".stage"
 # Kernel layer order, bottom-up.  Each file compiles against ONLY the
 # layers before it, so an upward `require` is a hard compile failure
 # (docs/adr/0003).  Append new layers/Leaves here in dependency order.
-layers := "aim-core aim-mode"
+layers := "aim-core aim-macros aim-motions aim-operators aim-commands aim-mode"
 
 default: ci
 
