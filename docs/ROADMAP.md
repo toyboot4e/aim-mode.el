@@ -20,13 +20,10 @@ Done so far:
 - **0.4** — `aim-define-text-object` macro and the i/a objects (word,
   WORD, pairs, quotes, paragraph); syntax-table word vocabulary;
   `W B E` motions. (`t` tag objects deferred.)
-
-## 0.5 — Visual States (char + line)
-
-- `v` and `V` over Emacs's region; operators act on the selection; text
-  objects extend it.
-- `gv`, `o` (swap ends); region-based Emacs commands work on visual
-  selections for free.
+- **0.5** — visual States, char and line: selections over Emacs's
+  region, operators take the selection as their range, `o` swaps ends,
+  `gv` restores, i/a select text objects. (Visual `p` — paste over
+  selection — deferred to the register milestone.)
 
 ## 0.6 — Search and marks
 

@@ -4,7 +4,7 @@
 
 ;; Author: toyboot4e <toyboot4e@gmail.com>
 ;; Maintainer: toyboot4e <toyboot4e@gmail.com>
-;; Version: 0.4.0
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: emulations
 ;; URL: https://github.com/toyboot4e/aim-mode.el
@@ -153,10 +153,11 @@ This is the entry point used by `nix run'."
   (let ((buffer (get-buffer-create "*aim-playground*")))
     (with-current-buffer buffer
       (when (zerop (buffer-size))
-        (insert "aim-mode playground -- Milestone 0.4 (text objects)\n"
+        (insert "aim-mode playground -- Milestone 0.5 (visual states)\n"
                 "Motions: h j k l w b e W B E 0 ^ $ gg G f F t T ; , with counts.\n"
                 "Operators: d c y > < (dd cc yy >> <<), and D C Y r ~ J x p P.\n"
                 "Text objects: diw daw ciw di( da\" dip dap ...\n"
+                "Visual: v V with motions and i/a objects; o swaps ends; gv.\n"
                 "Insert: i a A I o O with ESC; u / C-r undo; . repeats.\n"))
       (text-mode)
       (aim-mode 1))
