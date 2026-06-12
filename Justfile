@@ -8,6 +8,18 @@ stage := ".stage"
 # (docs/adr/0003).  Append new layers/Leaves here in dependency order.
 layers := "aim-core aim-mode"
 
+[private]
+alias c := compile
+
+[private]
+alias t := test
+
+[private]
+alias l := lint
+
+[private]
+alias r := run
+
 default: ci
 
 ci: compile lint test
