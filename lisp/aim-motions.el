@@ -126,42 +126,75 @@ falls out of the exclusive-motion adjustment rules in
 
 ;;;; Find-char motions
 
-(defun aim--find-char (count forward)
-  "Search for the next typed character COUNT times on this line.
-Move FORWARD or backward onto the found character; signal
-`user-error' without moving when the character is absent."
-  (let ((ch (char-to-string (aim--read-char (if forward "f-" "F-"))))
+(defvar aim--last-find nil
+  "Last find-char request, as a list (CHAR FORWARD TO), for `;' and `,'.")
+
+(defun aim--find-char-1 (count ch forward to)
+  "Move to the COUNTth occurrence of character CH on this line.
+Search FORWARD or backward; land on the character, or next to it
+when TO is non-nil.  Signal `user-error' without moving when the
+character is absent."
+  (let ((str (char-to-string ch))
         (start (point))
         (case-fold-search nil))
     (condition-case nil
         (if forward
             (progn (forward-char)
-                   (search-forward ch (line-end-position) nil count)
-                   (backward-char))
-          (search-backward ch (line-beginning-position) nil count))
+                   (search-forward str (line-end-position) nil count)
+                   (backward-char (if to 2 1)))
+          (search-backward str (line-beginning-position) nil count)
+          (when to (forward-char)))
       (error
        (goto-char start)
-       (user-error "Can't find %s" ch)))))
+       (user-error "Can't find %s" str)))))
+
+(defun aim--find-char (count forward to)
+  "Read a character and find its COUNTth occurrence on this line.
+FORWARD and TO as in `aim--find-char-1'.  Remembers the request
+for `;' and `,'."
+  (let ((ch (aim--read-char (if forward "f-" "F-"))))
+    (setq aim--last-find (list ch forward to))
+    (aim--find-char-1 count ch forward to)))
 
 (aim-define-motion aim-find-char (count)
   "Move onto the COUNTth occurrence of the next typed character."
   :type inclusive
-  (aim--find-char count t))
+  (aim--find-char count t nil))
 
 (aim-define-motion aim-find-char-to (count)
   "Move just before the COUNTth occurrence of the next typed character."
   :type inclusive
-  (aim--find-char count t)
-  (backward-char))
+  (aim--find-char count t t))
 
 (aim-define-motion aim-find-char-backward (count)
   "Move back onto the COUNTth previous occurrence of the typed character."
-  (aim--find-char count nil))
+  (aim--find-char count nil nil))
 
 (aim-define-motion aim-find-char-to-backward (count)
   "Move just after the COUNTth previous occurrence of the typed character."
-  (aim--find-char count nil)
-  (forward-char))
+  (aim--find-char count nil t))
+
+(aim-define-motion aim-repeat-find (count)
+  "Repeat the last f/F/t/T, COUNT times."
+  :type inclusive
+  (pcase aim--last-find
+    (`(,ch ,forward ,to)
+     ;; The repeated find's type depends on its direction; the
+     ;; operator loop reads the type property after the motion runs.
+     (put 'aim-repeat-find 'aim-motion-type
+          (if forward 'inclusive 'exclusive))
+     (aim--find-char-1 count ch forward to))
+    (_ (user-error "No find to repeat"))))
+
+(aim-define-motion aim-repeat-find-reverse (count)
+  "Repeat the last f/F/t/T in the opposite direction, COUNT times."
+  :type exclusive
+  (pcase aim--last-find
+    (`(,ch ,forward ,to)
+     (put 'aim-repeat-find-reverse 'aim-motion-type
+          (if forward 'exclusive 'inclusive))
+     (aim--find-char-1 count ch (not forward) to))
+    (_ (user-error "No find to repeat"))))
 
 (provide 'aim-motions)
 ;;; aim-motions.el ends here

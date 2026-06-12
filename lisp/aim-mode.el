@@ -51,7 +51,9 @@
   "f" #'aim-find-char
   "F" #'aim-find-char-backward
   "t" #'aim-find-char-to
-  "T" #'aim-find-char-to-backward)
+  "T" #'aim-find-char-to-backward
+  ";" #'aim-repeat-find
+  "," #'aim-repeat-find-reverse)
 
 (dotimes (i 9)
   (keymap-set aim-motion-map (number-to-string (1+ i)) #'digit-argument))

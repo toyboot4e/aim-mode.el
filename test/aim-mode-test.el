@@ -110,6 +110,16 @@
 (ert-deftest aim-motion-find-char-to-backward ()
   (aim-test :initial "hell|o" :keys "Th" :expect "h|ello"))
 
+(ert-deftest aim-motion-repeat-find ()
+  (aim-test :initial "|axbxc" :keys "fx;" :expect "axb|xc"))
+
+(ert-deftest aim-motion-repeat-find-reverse ()
+  (aim-test :initial "ax|bxc" :keys "fx," :expect "a|xbxc"))
+
+(ert-deftest aim-op-delete-repeat-find ()
+  "d; repeats the find inside an operator, inclusively."
+  (aim-test :initial "|axbxc" :keys "fxd;" :expect "a|c"))
+
 ;;;; Operators
 
 (ert-deftest aim-op-delete-word ()
