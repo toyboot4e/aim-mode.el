@@ -45,15 +45,26 @@ interactive spec string; default \"p\")."
 ARGLIST must be (BEG END TYPE).  When invoked interactively the
 operator reads a motion in operator-pending State; BODY then runs
 with the expanded range.  Pressing the operator's own key acts on
-whole lines (like `dd')."
+whole lines (like `dd').
+
+BODY may begin with a docstring, then optionally :motion-subst with
+an alist of (MOTION . REPLACEMENT) command symbols: when point is on
+a non-blank character, reading MOTION runs REPLACEMENT instead.
+This expresses Vim special cases like `cw' acting as `ce'."
   (declare (indent defun) (doc-string 3))
   (let ((doc (if (stringp (car body)) (pop body)
-               (format "Operator `%s'." name))))
+               (format "Operator `%s'." name)))
+        (subst nil))
+    (while (keywordp (car body))
+      (pcase (pop body)
+        (:motion-subst (setq subst (pop body)))
+        (other (error "Unknown aim-define-operator keyword: %S" other))))
     `(progn
        (put ',name 'aim-operator t)
+       (put ',name 'aim--motion-subst ',subst)
        (defun ,name ,arglist
          ,doc
-         (interactive (aim--operator-range (this-single-command-keys)))
+         (interactive (aim--operator-range (this-single-command-keys) ',name))
          ,@body))))
 
 ;;;; Ranges
@@ -104,11 +115,12 @@ before the first non-blank of its line."
 
 ;;;; Operator-pending State
 
-(defun aim--operator-range (op-keys)
+(defun aim--operator-range (op-keys &optional operator)
   "Read a motion in operator-pending State and return (BEG END TYPE).
 OP-KEYS is the key sequence that invoked the operator; pressing it
 again selects whole lines.  Counts given to the operator and to the
-motion multiply, as in Vim (`2d3w' acts on six words)."
+motion multiply, as in Vim (`2d3w' acts on six words).  OPERATOR is
+the operator command symbol, used for its motion substitutions."
   (let ((op-count (prefix-numeric-value current-prefix-arg))
         (had-count current-prefix-arg)
         (motion-count nil))
@@ -132,6 +144,9 @@ motion multiply, as in Vim (`2d3w' acts on six words)."
                 (throw 'aim--range
                        (aim--line-range (* op-count (or motion-count 1)))))
                ((and cmd (get cmd 'aim-motion-type))
+                (when (and operator (not (looking-at-p "[ \t\n]")))
+                  (setq cmd (or (alist-get cmd (get operator 'aim--motion-subst))
+                                cmd)))
                 (let* ((beg (point))
                        (explicit (or motion-count had-count))
                        (current-prefix-arg

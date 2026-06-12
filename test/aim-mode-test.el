@@ -158,6 +158,18 @@
 (ert-deftest aim-op-change-line ()
   (aim-test :initial "a\n|bcd\ne\n" :keys "ccx ESC" :expect "a\n|x\ne\n"))
 
+(ert-deftest aim-op-change-word-acts-as-ce ()
+  "Vim treats cw on a non-blank as ce: trailing whitespace survives."
+  (aim-test :initial "|hello world" :keys "cwbye ESC" :expect "by|e world"))
+
+(ert-deftest aim-op-change-on-blank-stays-cw ()
+  "On whitespace, cw is not substituted and behaves like dw."
+  (aim-test :initial "a| b" :keys "cwx ESC" :expect "a|xb"))
+
+(ert-deftest aim-op-change-line-keeps-indent ()
+  "cc preserves the line's indentation, like Vim with autoindent."
+  (aim-test :initial "  ab|c\nz" :keys "ccx ESC" :expect "  |x\nz"))
+
 (ert-deftest aim-op-yank-line-paste ()
   (aim-test :initial "|abc\ndef\n" :keys "yyp" :expect "abc\n|abc\ndef\n"))
 

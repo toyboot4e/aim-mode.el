@@ -4,9 +4,6 @@
 
 ;; Leaf module: the d / c / y operators.  Killed and yanked text goes
 ;; to the kill-ring (the unnamed register; docs/adr/0002).
-;;
-;; Known divergence, to fix in a later Milestone: `cw' eats the
-;; trailing whitespace (Vim treats `cw' as `ce').
 
 ;;; Code:
 
@@ -21,15 +18,22 @@
 
 (aim-define-operator aim-change (beg end type)
   "Kill from BEG to END and enter insert State.
-A linewise TYPE keeps an empty line to insert into.  The kill and
-the following insertion form a single undo step."
-  (aim--start-undo-session)
-  (kill-region beg end)
-  (goto-char beg)
-  (when (eq type 'linewise)
-    (insert "\n")
-    (backward-char))
-  (aim-switch-state 'insert))
+A linewise TYPE keeps the first line's indentation to insert after,
+like Vim's `cc' with autoindent.  The kill and the following
+insertion form a single undo step."
+  :motion-subst ((aim-forward-word-begin . aim-forward-word-end))
+  (let ((indent (and (eq type 'linewise)
+                     (save-excursion
+                       (goto-char beg)
+                       (buffer-substring beg (progn (back-to-indentation)
+                                                    (point)))))))
+    (aim--start-undo-session)
+    (kill-region beg end)
+    (goto-char beg)
+    (when (eq type 'linewise)
+      (insert indent "\n")
+      (backward-char))
+    (aim-switch-state 'insert)))
 
 (aim-define-operator aim-yank (beg end type)
   "Copy from BEG to END into the kill-ring.
