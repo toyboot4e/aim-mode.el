@@ -137,6 +137,58 @@
   "d; repeats the find inside an operator, inclusively."
   (aim-test :initial "|axbxc" :keys "fxd;" :expect "a|c"))
 
+;;;; Block, pair and mark motions
+
+(ert-deftest aim-motion-forward-paragraph ()
+  (aim-test :initial "|aa\nbb\n\ncc\n" :keys "}" :expect "aa\nbb\n|\ncc\n"))
+
+(ert-deftest aim-motion-backward-paragraph ()
+  (aim-test :initial "aa\nbb\n\nc|c\n" :keys "{" :expect "aa\nbb\n|\ncc\n"))
+
+(ert-deftest aim-motion-forward-sentence ()
+  (aim-test :initial "|Foo bar.  Baz qux." :keys ")"
+            :expect "Foo bar.  |Baz qux."))
+
+(ert-deftest aim-motion-matching-pair-forward ()
+  (aim-test :initial "|(ab)" :keys "%" :expect "(ab|)"))
+
+(ert-deftest aim-motion-matching-pair-backward ()
+  (aim-test :initial "(ab|)" :keys "%" :expect "|(ab)"))
+
+(ert-deftest aim-op-delete-matching-pair ()
+  (aim-test :initial "x|(ab)y" :keys "d%" :expect "x|y"))
+
+(ert-deftest aim-marks-set-and-jump ()
+  (aim-test :initial "|aa bb cc" :keys "maww`a" :expect "|aa bb cc"))
+
+(ert-deftest aim-marks-line-jump ()
+  (aim-test :initial "aa\n  b|b\n" :keys "magg'a" :expect "aa\n  |bb\n"))
+
+(ert-deftest aim-marks-delete-to-mark ()
+  (aim-test :initial "aa |bb cc" :keys "mawd`a" :expect "aa |cc"))
+
+(ert-deftest aim-marks-backtick-backtick-bounces ()
+  "`` returns to the position before the last jump."
+  (aim-test :initial "aa\nb|b\ncc\n" :keys "G``" :expect "aa\nb|b\ncc\n"))
+
+;;;; Search
+
+(ert-deftest aim-search-lands-on-match-start ()
+  (aim-test :initial "|ab cd ef cd" :keys "/cd RET" :expect "ab |cd ef cd"))
+
+(ert-deftest aim-search-next-wraps ()
+  (aim-test :initial "|ab cd ef cd" :keys "/cd RET nn" :expect "ab |cd ef cd"))
+
+(ert-deftest aim-search-previous ()
+  (aim-test :initial "|ab cd ef cd" :keys "/cd RET nN" :expect "ab |cd ef cd"))
+
+(ert-deftest aim-search-symbol-at-point ()
+  (aim-test :initial "ab |cd ef cd" :keys "*" :expect "ab cd ef |cd"))
+
+(ert-deftest aim-search-as-operator-motion ()
+  "dn deletes exclusively up to the next match."
+  (aim-test :initial "|ab cd ef cd" :keys "/cd RET dn" :expect "ab |cd"))
+
 ;;;; Operators
 
 (ert-deftest aim-op-delete-word ()

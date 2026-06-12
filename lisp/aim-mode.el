@@ -34,6 +34,7 @@
 (require 'aim-operators)
 (require 'aim-commands)
 (require 'aim-visual)
+(require 'aim-search)
 
 ;;;; Default bindings
 
@@ -58,7 +59,22 @@
   "t" #'aim-find-char-to
   "T" #'aim-find-char-to-backward
   ";" #'aim-repeat-find
-  "," #'aim-repeat-find-reverse)
+  "," #'aim-repeat-find-reverse
+  "{" #'aim-backward-paragraph
+  "}" #'aim-forward-paragraph
+  "(" #'aim-backward-sentence
+  ")" #'aim-forward-sentence
+  "%" #'aim-matching-pair
+  "H" #'aim-window-top
+  "M" #'aim-window-middle
+  "L" #'aim-window-bottom
+  "C-d" #'aim-scroll-down
+  "C-u" #'aim-scroll-up
+  "`" #'aim-goto-marker
+  "'" #'aim-goto-marker-line
+  "n" #'aim-search-next
+  "N" #'aim-search-previous
+  "*" #'aim-search-symbol-forward)
 
 (dotimes (i 9)
   (keymap-set aim-motion-map (number-to-string (1+ i)) #'digit-argument))
@@ -89,7 +105,10 @@
   "O" #'aim-open-above
   "v" #'aim-visual-char
   "V" #'aim-visual-line
-  "g v" #'aim-visual-restore)
+  "g v" #'aim-visual-restore
+  "m" #'aim-set-marker
+  "/" #'aim-search-forward
+  "?" #'aim-search-backward)
 
 (define-keymap :keymap aim-visual-state-map
   "ESC" #'aim-visual-exit

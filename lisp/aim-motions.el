@@ -112,11 +112,97 @@ falls out of the exclusive-motion adjustment rules in
     (skip-chars-forward "^ \t\n")
     (unless (bobp) (backward-char))))
 
+;;;; Block motions
+
+(aim-define-motion aim-forward-paragraph (count)
+  "Move to the COUNTth next blank line after a paragraph."
+  (dotimes (_ count)
+    (forward-line 0)
+    (while (and (not (eobp)) (looking-at-p "^[ \t]*$"))
+      (forward-line 1))
+    (while (and (not (eobp)) (not (looking-at-p "^[ \t]*$")))
+      (forward-line 1))))
+
+(aim-define-motion aim-backward-paragraph (count)
+  "Move to the COUNTth previous blank line before a paragraph."
+  (dotimes (_ count)
+    (forward-line 0)
+    (while (and (not (bobp)) (looking-at-p "^[ \t]*$"))
+      (forward-line -1))
+    (while (and (not (bobp)) (not (looking-at-p "^[ \t]*$")))
+      (forward-line -1))))
+
+(aim-define-motion aim-forward-sentence (count)
+  "Move to the beginning of the COUNTth next sentence."
+  (forward-sentence count)
+  (skip-chars-forward " \t\n"))
+
+(aim-define-motion aim-backward-sentence (count)
+  "Move to the beginning of the COUNTth previous sentence."
+  (backward-sentence count))
+
+(aim-define-motion aim-matching-pair (_count)
+  "Jump between matching pair characters (Vim's %).
+Uses the first of ()[]{} at or after point on the current line."
+  :type inclusive
+  (let ((pairs '((?\( . ?\)) (?\[ . ?\]) (?{ . ?})))
+        (pos nil))
+    (save-excursion
+      (while (and (not pos) (not (eolp)))
+        (if (memq (char-after) '(?\( ?\) ?\[ ?\] ?{ ?}))
+            (setq pos (point))
+          (forward-char))))
+    (unless pos
+      (user-error "No pair character on this line"))
+    (goto-char pos)
+    (let* ((c (char-after))
+           (open (rassq c pairs))
+           (target (if open
+                       ;; on a close char: its open
+                       (aim--scan-open-backward (car open) c 1)
+                     (aim--match-close pos c (cdr (assq c pairs))))))
+      (unless target
+        (user-error "Unmatched %c" c))
+      (goto-char target))))
+
+;;;; Window and scroll motions
+
+(aim-define-motion aim-window-top (count)
+  "Move to window line COUNT from the top, at its first non-blank."
+  :type linewise
+  (move-to-window-line (1- count))
+  (back-to-indentation))
+
+(aim-define-motion aim-window-middle (_count)
+  "Move to the middle window line, at its first non-blank."
+  :type linewise
+  (move-to-window-line nil)
+  (back-to-indentation))
+
+(aim-define-motion aim-window-bottom (count)
+  "Move to window line COUNT from the bottom, at its first non-blank."
+  :type linewise
+  (move-to-window-line (- count))
+  (back-to-indentation))
+
+(aim-define-motion aim-scroll-down (count)
+  "Move COUNT half-windows down, scrolling."
+  :type linewise
+  (forward-line (* count (max 1 (/ (window-body-height) 2))))
+  (ignore-errors (recenter)))
+
+(aim-define-motion aim-scroll-up (count)
+  "Move COUNT half-windows up, scrolling."
+  :type linewise
+  (forward-line (- (* count (max 1 (/ (window-body-height) 2)))))
+  (ignore-errors (recenter)))
+
 ;;;; Buffer motions
 
 (aim-define-motion aim-goto-first-line (count)
   "Move to line COUNT (default the first), at its first non-blank."
   :type linewise
+  (aim--push-jump)
   (goto-char (point-min))
   (forward-line (1- count))
   (back-to-indentation))
@@ -125,6 +211,7 @@ falls out of the exclusive-motion adjustment rules in
   "Move to line COUNT, or the last line without a count."
   :type linewise
   :interactive "P"
+  (aim--push-jump)
   (if count
       (progn (goto-char (point-min))
              (forward-line (1- (prefix-numeric-value count))))
@@ -204,6 +291,39 @@ for `;' and `,'."
           (if forward 'exclusive 'inclusive))
      (aim--find-char-1 count ch (not forward) to))
     (_ (user-error "No find to repeat"))))
+
+;;;; Marks
+
+(defun aim--goto-marker (line)
+  "Jump to the marker read from the next key.
+Backtick or apostrophe means the position before the last jump.
+LINE lands on the first non-blank of the target line."
+  (let ((ch (aim--read-char "mark:")))
+    (cond ((memq ch '(?` ?'))
+           (let ((m (or aim--last-jump
+                        (user-error "No previous jump"))))
+             (let ((pos (marker-position m)))
+               (aim--push-jump)
+               (goto-char pos))))
+          (t
+           (let ((r (get-register ch)))
+             (unless (markerp r)
+               (user-error "No marker in register %c" ch))
+             (unless (eq (marker-buffer r) (current-buffer))
+               (pop-to-buffer-same-window (marker-buffer r)))
+             (aim--push-jump)
+             (goto-char r))))
+    (when line
+      (back-to-indentation))))
+
+(aim-define-motion aim-goto-marker (_count)
+  "Jump to the marker read from the next key, exactly (Vim's backtick)."
+  (aim--goto-marker nil))
+
+(aim-define-motion aim-goto-marker-line (_count)
+  "Jump to the marker's line, at its first non-blank (Vim's ')."
+  :type linewise
+  (aim--goto-marker t))
 
 (provide 'aim-motions)
 ;;; aim-motions.el ends here

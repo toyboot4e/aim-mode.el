@@ -105,41 +105,7 @@ starting on blanks includes them with the following word."
     (cons beg end)))
 
 ;;;; Pairs
-
-(defun aim--scan-open-backward (open close count)
-  "Position of the COUNTth OPEN enclosing point, scanning backward.
-CLOSE characters re-balance; point sitting on OPEN counts as inside.
-Return nil when there is no such OPEN."
-  (save-excursion
-    (when (eq (char-after) open)
-      (forward-char))
-    (let ((depth 0) (n count) (found nil))
-      (while (and (not found) (not (bobp)))
-        (let ((c (char-before)))
-          (cond ((eq c close) (setq depth (1+ depth)))
-                ((eq c open)
-                 (if (> depth 0)
-                     (setq depth (1- depth))
-                   (setq n (1- n))
-                   (when (zerop n)
-                     (setq found (1- (point))))))))
-        (unless found (backward-char)))
-      found)))
-
-(defun aim--match-close (openp open close)
-  "Position of the CLOSE matching the OPEN at position OPENP, or nil."
-  (save-excursion
-    (goto-char (1+ openp))
-    (let ((depth 0) (found nil))
-      (while (and (not found) (not (eobp)))
-        (let ((c (char-after)))
-          (cond ((eq c open) (setq depth (1+ depth)))
-                ((eq c close)
-                 (if (> depth 0)
-                     (setq depth (1- depth))
-                   (setq found (point))))))
-        (unless found (forward-char)))
-      found)))
+;; Scanning helpers live in aim-core (shared with the % motion).
 
 (defun aim--pair-range (open close count around)
   "Range of the COUNTth OPEN..CLOSE pair enclosing point.

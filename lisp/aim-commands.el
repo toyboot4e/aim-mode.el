@@ -147,6 +147,14 @@ Point ends on the joining space."
         (insert " ")
         (backward-char)))))
 
+;;;; Marks
+
+(defun aim-set-marker ()
+  "Store point in the register read from the next key (Vim's m).
+Shared with Emacs's own register system (`C-x r')."
+  (interactive)
+  (point-to-register (aim--read-char "m-")))
+
 ;;;; Undo
 
 (defun aim-undo (count)
