@@ -4,8 +4,10 @@ Yet another Vim mode for Emacs: Vim's everyday grammar (the *Common Core*)
 guaranteed, Emacs's own subsystems (isearch, kill-ring, registers, kmacro,
 undo) underneath.
 
-Design documents: [CONTEXT.md](./CONTEXT.md) (glossary) and
-[docs/adr/](./docs/adr/) (architecture decisions).
+Design documents: [CONTEXT.md](./CONTEXT.md) (glossary),
+[docs/adr/](./docs/adr/) (architecture decisions),
+[docs/ROADMAP.md](./docs/ROADMAP.md) (milestones), and
+[docs/CAVEATS.md](./docs/CAVEATS.md) (known divergences).
 
 ## Try it
 

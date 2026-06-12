@@ -10,6 +10,12 @@ subsystems underneath; a small layered Kernel with orthogonal Leaves.
   arises, check whether the glossary already answers it.
 - `docs/adr/` — architecture decision records. Do not contradict an ADR
   without an explicit decision to supersede it.
+- `docs/ROADMAP.md` — milestone plan. Consult it for what belongs in the
+  current milestone; update it when scope decisions change.
+- `docs/CAVEATS.md` — shipped divergences/limitations. Whenever you ship
+  behavior that diverges from Vim or carries a known limitation, add an
+  entry (permanent + ADR link, or temporary + milestone); when you fix
+  one, remove it. Silent divergence is a bug.
 
 ## Hard rules
 

@@ -1,0 +1,85 @@
+# Roadmap
+
+Milestones toward 1.0 (see CONTEXT.md for the Milestone and 1.0
+definitions). Ordering follows the dependency structure in docs/adr/0003:
+the repeat layer slots into the Kernel before more commands accrete, then
+features grow leaf by leaf. Scope per milestone is a guide, not a
+contract — but nothing shipped may contradict Common Core behavior.
+
+Done so far:
+
+- **0.1** — tooling: flake.nix (`nix run` playground), Justfile with
+  layering-enforced staged compilation, ERT buffer harness, CI.
+- **0.2** — Kernel tracer bullet: normal/insert/operator-pending States,
+  motion/operator macros with the type system, counts, core motions,
+  `d`/`c`/`y` (+ `dd`/`cc`/`yy`), `x p P u`, insert entries, undo grouping.
+
+## 0.3 — Repeat layer and operator polish
+
+- `aim-repeat.el` slots between core and macros (Kernel layer list grows):
+  record the last editing command, its count, and insert-session
+  keystrokes; `.` replays, `3.` overrides the count.
+- Migrate `aim-commands.el` to the definition macros so every editing
+  command participates in repeat.
+- Operator polish, retiring 0.3-tagged caveats: `cw` behaves as `ce`,
+  `dw` line-crossing matches Vim, sticky goal column for `j`/`k`,
+  `cc` keeps indentation.
+- More everyday vocabulary: `D C Y`, `r`, `~`, `J`, `>` `<` operators,
+  `;` `,` (repeat find-char).
+
+## 0.4 — Text objects
+
+- `aim-define-text-object` macro; `i`/`a` readable in operator-pending
+  State (`diw`, `ci(`, `da"` ...).
+- Objects: `w W`, `( ) b`, `[ ]`, `{ } B`, `' "` backtick, `p` paragraph,
+  `t` tag (stretch).
+- Word motions consult the syntax table (retires the `iskeyword` caveat).
+- `W B E` WORD motions.
+
+## 0.5 — Visual States (char + line)
+
+- `v` and `V` over Emacs's region; operators act on the selection; text
+  objects extend it.
+- `gv`, `o` (swap ends); region-based Emacs commands work on visual
+  selections for free.
+
+## 0.6 — Search and marks
+
+- `/ ? n N *` as thin isearch glue (docs/adr/0002); Emacs regex by design.
+- `m`, `` ` ``, `'` over Emacs markers in registers; `` `` ``/`''`
+  (last-jump) special marks.
+- Paragraph/sentence/scroll motions: `{ } ( )`, `%`, `C-d C-u`, `H M L`.
+
+## 0.7 — Ex Dispatcher
+
+- `:` minibuffer dispatcher (docs/adr/0002): whitelist `w q wq e <line>`
+  and `[range]s/pat/rep/[g]` over numbers/`%`/`.`/`$` ranges, translated
+  to Emacs replace commands.
+- Fallthroughs: leading `(` evaluates as Emacs Lisp; unrecognized input
+  is offered to `M-x`.
+
+## 0.8 — Registers and kmacros
+
+- `"a`–`"z` map onto Emacs registers; unnamed register stays the
+  kill-ring head. Register *types* (charwise/linewise) retire the paste
+  heuristic caveat.
+- `q`/`@` as kmacro glue: `qa` records into register `a`, `@a` executes,
+  `@@` repeats.
+
+## 0.9 — Remaining States and integration
+
+- Visual block (`C-v`) on rectangle functions — every operator grows a
+  blockwise case.
+- Replace State (`R`) over `overwrite-mode` with backspace-restore.
+- Motion State for read-only contexts.
+- `aim-define-key` with per-major-mode auxiliary keymaps; first curated
+  `aim-x-*.el` Leaves (normal State everywhere needs them).
+- Terminal ESC via `input-decode-map` timeout (retires the Meta caveat).
+
+## 1.0 — Common Core completeness
+
+- Feature-complete against CONTEXT.md's Common Core definition: audit
+  motions/operators/text objects/counts against everyday Vim usage.
+- Repeat works for every editing command; no temporary caveats left in
+  docs/CAVEATS.md.
+- Documentation pass; MELPA-ready packaging.
