@@ -27,12 +27,16 @@ win outside operator ranges).
 Search and (future) `:s///` use Emacs regular expressions, never Vim's
 dialect (docs/adr/0002).
 
+### Repeat replays recorded input
+
+`.` records the *input keys* of the last change (operator keys, motion,
+read characters, insert-session keystrokes) and replays them through
+`execute-kbd-macro` — the command + input recording decided early
+(docs/adr/0003). A replayed command that consults state outside the
+buffer (completion popups, minibuffer reads other than characters) may
+diverge from its original run. Evil shares this property.
+
 ## Temporary
-
-### `cw` eats trailing whitespace
-
-Vim treats `cw` as `ce`; aim-mode currently changes the same range `dw`
-would delete. Fix planned with the repeat/operator polish in **0.3**.
 
 ### Terminal Meta chords shadowed in insert State
 
@@ -53,21 +57,3 @@ Word characters are hard-coded as `[:alnum:]_` instead of consulting the
 buffer's syntax table / anything like Vim's `iskeyword`. Noticeable in
 e.g. Lisp modes where `-` is part of symbols. Revisit with text objects
 in **0.4**.
-
-### `dw` line-crossing is approximated
-
-Vim's rule "`dw` on the last word of a line stops at end of line" is
-implemented as "back up one character when the motion lands at the
-beginning of a line in operator-pending State". Multi-count `dw` across
-lines may differ from Vim in whitespace handling. Polish in **0.3**.
-
-### `j`/`k` forget the goal column
-
-Each `j`/`k` re-reads the current column, so travelling through a short
-line loses the original column (Vim remembers the desired column).
-Polish in **0.3**.
-
-### `cc` loses indentation
-
-Vim's `cc` with autoindent keeps the line's indentation; ours leaves an
-empty line. Polish in **0.3**.

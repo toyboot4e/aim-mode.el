@@ -13,19 +13,10 @@ Done so far:
 - **0.2** — Kernel tracer bullet: normal/insert/operator-pending States,
   motion/operator macros with the type system, counts, core motions,
   `d`/`c`/`y` (+ `dd`/`cc`/`yy`), `x p P u`, insert entries, undo grouping.
-
-## 0.3 — Repeat layer and operator polish
-
-- `aim-repeat.el` slots between core and macros (Kernel layer list grows):
-  record the last editing command, its count, and insert-session
-  keystrokes; `.` replays, `3.` overrides the count.
-- Migrate `aim-commands.el` to the definition macros so every editing
-  command participates in repeat.
-- Operator polish, retiring 0.3-tagged caveats: `cw` behaves as `ce`,
-  `dw` line-crossing matches Vim, sticky goal column for `j`/`k`,
-  `cc` keeps indentation.
-- More everyday vocabulary: `D C Y`, `r`, `~`, `J`, `>` `<` operators,
-  `;` `,` (repeat find-char).
+- **0.3** — repeat layer (`.` with count override, insert-session
+  recording, operator transcripts) as a Kernel layer between core and
+  macros; Vim's exclusive-motion adjustment rules; `cw` as `ce`; sticky
+  goal column; `cc` keeps indent; `D C Y r ~ J`, `>` `<`, `;` `,`.
 
 ## 0.4 — Text objects
 

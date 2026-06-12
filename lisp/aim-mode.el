@@ -4,7 +4,7 @@
 
 ;; Author: toyboot4e <toyboot4e@gmail.com>
 ;; Maintainer: toyboot4e <toyboot4e@gmail.com>
-;; Version: 0.2.0
+;; Version: 0.3.0
 ;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: emulations
 ;; URL: https://github.com/toyboot4e/aim-mode.el
@@ -115,9 +115,10 @@ This is the entry point used by `nix run'."
   (let ((buffer (get-buffer-create "*aim-playground*")))
     (with-current-buffer buffer
       (when (zerop (buffer-size))
-        (insert "aim-mode playground -- Milestone 0.2 (Kernel tracer bullet)\n"
-                "Try: h j k l w b e 0 ^ $ gg G f t / d c y with counts,\n"
-                "dd yy p P x u, and i a A I o O with ESC.\n"))
+        (insert "aim-mode playground -- Milestone 0.3 (repeat layer)\n"
+                "Motions: h j k l w b e 0 ^ $ gg G f F t T ; , with counts.\n"
+                "Operators: d c y > < (dd cc yy >> <<), and D C Y r ~ J x p P.\n"
+                "Insert: i a A I o O with ESC; u / C-r undo; . repeats.\n"))
       (text-mode)
       (aim-mode 1))
     (pop-to-buffer buffer)))
