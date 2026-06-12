@@ -36,7 +36,20 @@ read characters, insert-session keystrokes) and replays them through
 buffer (completion popups, minibuffer reads other than characters) may
 diverge from its original run. Evil shares this property.
 
+### Foreign kills fall back to a heuristic
+
+Text killed by aim-mode carries its charwise/linewise type as a text
+property; text killed by other Emacs commands has none, so paste guesses
+from a trailing newline. Inherent to sharing the kill-ring
+(docs/adr/0002).
+
 ## Temporary
+
+### `.` ignores the register prefix
+
+`"adw` repeats as `dw`: the `"` prefix is a separate command whose
+register does not enter the repeat record. Fix when repeat learns about
+prefix state; no milestone committed yet.
 
 ### Terminal Meta chords shadowed in insert State
 
@@ -44,12 +57,6 @@ diverge from its original run. Evil shares this property.
 as `ESC x`) Meta chords are shadowed in insert and operator-pending
 States. GUI Emacs is unaffected. The `input-decode-map` timeout
 treatment lands in **0.9**.
-
-### Paste guesses linewise-ness
-
-`p`/`P` treat kill-ring text ending in a newline as linewise. Real
-register types (so a charwise kill ending in `\n` pastes charwise)
-arrive with the register layer in **0.8**.
 
 ### Pair and quote objects are context-blind
 

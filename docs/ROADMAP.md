@@ -30,14 +30,9 @@ Done so far:
 - **0.7** — the Ex Dispatcher: whitelist (`w q q! wq x e <line> $`,
   `[range]s/pat/rep/[g]`), `(sexp)` evaluation, M-x fallthrough;
   visual `:s` over the selection.
-
-## 0.8 — Registers and kmacros
-
-- `"a`–`"z` map onto Emacs registers; unnamed register stays the
-  kill-ring head. Register *types* (charwise/linewise) retire the paste
-  heuristic caveat.
-- `q`/`@` as kmacro glue: `qa` records into register `a`, `@a` executes,
-  `@@` repeats.
+- **0.8** — typed kills (char/line text property; paste stops
+  guessing), `"a`–`"z` over Emacs registers, visual `p` over the
+  selection, `q`/`@` kmacro glue with `@@` and counts.
 
 ## 0.9 — Remaining States and integration
 
