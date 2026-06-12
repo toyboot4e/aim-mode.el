@@ -24,13 +24,9 @@ Done so far:
   region, operators take the selection as their range, `o` swaps ends,
   `gv` restores, i/a select text objects. (Visual `p` — paste over
   selection — deferred to the register milestone.)
-
-## 0.6 — Search and marks
-
-- `/ ? n N *` as thin isearch glue (docs/adr/0002); Emacs regex by design.
-- `m`, `` ` ``, `'` over Emacs markers in registers; `` `` ``/`''`
-  (last-jump) special marks.
-- Paragraph/sentence/scroll motions: `{ } ( )`, `%`, `C-d C-u`, `H M L`.
+- **0.6** — `/ ? n N *` as isearch glue with Vim wraparound and
+  match-start landing; marks `m` `` ` `` `'` over Emacs registers with
+  the `` `` `` last-jump mark; `{ } ( ) % H M L C-d C-u` motions.
 
 ## 0.7 — Ex Dispatcher
 
