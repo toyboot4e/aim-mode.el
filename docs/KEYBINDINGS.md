@@ -115,7 +115,7 @@ Command names are shown without the `aim-` prefix.
 |-----|---------|
 | `!` | filter |
 | `"` | use-register |
-| `$` | line-end |
+| `$` | visual-end-of-line |
 | `%` | matching-pair |
 | `'` | goto-marker-line |
 | `(` | backward-sentence |

@@ -35,10 +35,14 @@
     (dolist (it (sort raw (lambda (a b) (string< (car a) (car b)))))
       (unless (gethash (car it) seen)
         (puthash (car it) t seen)
-        (push (format "| `%s` | %s |"
-                      (car it)
-                      (string-replace "aim-" "" (symbol-name (cdr it))))
-              rows)))
+        ;; Resolve the effective binding so a map's own key wins over an
+        ;; inherited one (e.g. visual `$' shadows the motion-map `$').
+        (let ((def (or (ignore-errors (keymap-lookup map (car it))) (cdr it))))
+          (when (and (symbolp def) def (not (eq def 'undefined)))
+            (push (format "| `%s` | %s |"
+                          (car it)
+                          (string-replace "aim-" "" (symbol-name def)))
+                  rows)))))
     (concat "## " title "\n\n"
             "| Key | Command |\n|-----|---------|\n"
             (string-join (nreverse rows) "\n")
