@@ -82,6 +82,8 @@
   "L" #'aim-window-bottom
   "C-d" #'aim-scroll-down
   "C-u" #'aim-scroll-up
+  "C-f" #'aim-scroll-page-down
+  "C-b" #'aim-scroll-page-up
   "`" #'aim-goto-marker
   "'" #'aim-goto-marker-line
   "n" #'aim-search-next

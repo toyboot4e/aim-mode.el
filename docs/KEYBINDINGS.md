@@ -33,7 +33,9 @@ Command names are shown without the `aim-` prefix.
 | `B` | backward-bigword-begin |
 | `C` | change-line-rest |
 | `C-a` | increment |
+| `C-b` | scroll-page-up |
 | `C-d` | scroll-down |
+| `C-f` | scroll-page-down |
 | `C-r` | redo |
 | `C-u` | scroll-up |
 | `C-v` | visual-block |
@@ -133,7 +135,9 @@ Command names are shown without the `aim-` prefix.
 | `>` | shift-right |
 | `A` | visual-append |
 | `B` | backward-bigword-begin |
+| `C-b` | scroll-page-up |
 | `C-d` | scroll-down |
+| `C-f` | scroll-page-down |
 | `C-u` | scroll-up |
 | `C-v` | visual-block |
 | `E` | forward-bigword-end |
@@ -205,7 +209,9 @@ Command names are shown without the `aim-` prefix.
 | `;` | repeat-find |
 | `<escape>` | keyboard-quit |
 | `B` | backward-bigword-begin |
+| `C-b` | scroll-page-up |
 | `C-d` | scroll-down |
+| `C-f` | scroll-page-down |
 | `C-u` | scroll-up |
 | `E` | forward-bigword-end |
 | `ESC` | keyboard-quit |

@@ -43,6 +43,16 @@ property; text killed by other Emacs commands has none, so paste guesses
 from a trailing newline. Inherent to sharing the kill-ring
 (docs/adr/0002).
 
+### `gg`/`G` keep the column, not the first non-blank
+
+Vim's `startofline` (on by default) puts `gg`/`G` on the target line's
+first non-blank character. aim instead keeps the cursor's column,
+matching Evil's default (`evil-start-of-line` nil) — the dominant Vim
+layer made the same choice because column-keeping is more useful in
+practice. Operator use (`dG`, `gg=G`) is linewise regardless, so this
+only affects cursor motion. Strict-Vim behavior is not configurable,
+deliberately, to keep the surface small.
+
 ### Text objects are not context-aware
 
 Pair (`i(`), quote (`i"`) and tag (`it`) objects scan characters with

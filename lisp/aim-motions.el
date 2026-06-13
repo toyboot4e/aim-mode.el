@@ -261,28 +261,51 @@ Uses the first of ()[]{} at or after point on the current line."
   (forward-line (- (* count (max 1 (/ (window-body-height) 2)))))
   (ignore-errors (recenter)))
 
+(defun aim--scroll-page-lines ()
+  "Lines to move for a full-window scroll, keeping two lines of overlap."
+  (max 1 (- (window-body-height) 2)))
+
+(aim-define-motion aim-scroll-page-down (count)
+  "Move COUNT full windows down, scrolling (Vim's \\`C-f')."
+  :type linewise
+  (forward-line (* count (aim--scroll-page-lines)))
+  (ignore-errors (recenter)))
+
+(aim-define-motion aim-scroll-page-up (count)
+  "Move COUNT full windows up, scrolling (Vim's \\`C-b')."
+  :type linewise
+  (forward-line (- (* count (aim--scroll-page-lines))))
+  (ignore-errors (recenter)))
+
 ;;;; Buffer motions
 
 (aim-define-motion aim-goto-first-line (count)
-  "Move to line COUNT (default the first), at its first non-blank."
+  "Move to line COUNT (default the first), keeping the current column.
+Vim's `gg' lands on the first non-blank (`startofline'); aim keeps the
+column instead, like Evil's default (`evil-start-of-line' nil).  See
+docs/CAVEATS.md."
   :type linewise
-  (aim--push-jump)
-  (goto-char (point-min))
-  (forward-line (1- count))
-  (back-to-indentation))
+  (let ((col (current-column)))
+    (aim--push-jump)
+    (goto-char (point-min))
+    (forward-line (1- count))
+    (move-to-column col)))
 
 (aim-define-motion aim-goto-line (count)
-  "Move to line COUNT, or the last line without a count."
+  "Move to line COUNT, or the last line without a count.
+Keeps the current column rather than moving to the first non-blank
+\(see `aim-goto-first-line')."
   :type linewise
   :interactive "P"
-  (aim--push-jump)
-  (if count
-      (progn (goto-char (point-min))
-             (forward-line (1- (prefix-numeric-value count))))
-    (goto-char (point-max))
-    (when (and (bolp) (not (bobp)))
-      (forward-line -1)))
-  (back-to-indentation))
+  (let ((col (current-column)))
+    (aim--push-jump)
+    (if count
+        (progn (goto-char (point-min))
+               (forward-line (1- (prefix-numeric-value count))))
+      (goto-char (point-max))
+      (when (and (bolp) (not (bobp)))
+        (forward-line -1)))
+    (move-to-column col)))
 
 ;;;; Find-char motions
 

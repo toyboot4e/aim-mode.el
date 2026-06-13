@@ -11,7 +11,7 @@ aim-mode covers, and where it deliberately differs. Full key list:
 replace, motion.
 
 **Motions** — `h j k l`, `w b e W B E`, `0 ^ $ g_ |`, `+ - _`,
-`gj gk`, `f F t T ; ,`, `gg G`, `{ } ( )`, `%`, `H M L`, `C-d C-u`,
+`gj gk`, `f F t T ; ,`, `gg G`, `{ } ( )`, `%`, `H M L`, `C-d C-u C-f C-b`,
 `[[ ]] [] ][`, `/ ? n N *`, marks `` ` ``, `'`, ``` `` ``` with `m`.
 
 **Operators** — `d c y`, `> <`, `= `, `gu gU g~`, `gq gw`, `!`. All
@@ -43,6 +43,9 @@ These are by design (see CAVEATS.md for the full rationale):
 - **Cursor model**: point sits between characters, so `$` rests after
   the last character and `l` can reach end of line. Operator ranges
   still match Vim.
+- **`gg`/`G` keep the column** instead of moving to the first non-blank
+  (Vim's `'startofline'`, on by default). Follows Evil's default
+  (`evil-start-of-line` nil); operator use (`dG`) stays linewise.
 - **Text objects are char-based** (like Vim's own), not syntax-aware —
   structural awareness is left to user-side tree-sitter.
 - **`.` replays recorded input**, so a change that reads from a

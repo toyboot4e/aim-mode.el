@@ -112,6 +112,25 @@
 (ert-deftest aim-motion-goto-line-count ()
   (aim-test :initial "|abc\ndef\nghi\n" :keys "2G" :expect "abc\n|def\nghi\n"))
 
+(ert-deftest aim-goto-first-line-keeps-column ()
+  "gg keeps the cursor column instead of moving to the first non-blank."
+  (aim-test :initial "    abc\nx|yz\n" :keys "gg" :expect " |   abc\nxyz\n"))
+
+(ert-deftest aim-goto-last-line-keeps-column ()
+  "G keeps the cursor column instead of moving to the first non-blank."
+  (aim-test :initial "x|y\n      wxyz\n" :keys "G" :expect "xy\n |     wxyz\n"))
+
+(ert-deftest aim-scroll-page-moves-and-returns ()
+  "C-f scrolls a page forward; C-b brings it back the same distance."
+  (aim-test-with-buffer (mapconcat #'number-to-string (number-sequence 1 200) "\n")
+    (aim-mode 1)
+    (goto-char (point-min))
+    (let ((start (line-number-at-pos)))
+      (aim-test-keys "C-f")
+      (should (> (line-number-at-pos) start))
+      (aim-test-keys "C-b")
+      (should (= (line-number-at-pos) start)))))
+
 (ert-deftest aim-motion-find-char ()
   (aim-test :initial "|hello" :keys "fl" :expect "he|llo"))
 
