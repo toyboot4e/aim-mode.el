@@ -189,6 +189,69 @@
   "dn deletes exclusively up to the next match."
   (aim-test :initial "|ab cd ef cd" :keys "/cd RET dn" :expect "ab |cd"))
 
+;;;; Case / reindent / reformat / filter operators
+
+(ert-deftest aim-op-downcase-word ()
+  (aim-test :initial "|HELLO world" :keys "guw" :expect "|hello world"))
+
+(ert-deftest aim-op-upcase-word ()
+  (aim-test :initial "|hello world" :keys "gUw" :expect "|HELLO world"))
+
+(ert-deftest aim-op-swap-case-word ()
+  (aim-test :initial "|HeLlo" :keys "g~w" :expect "|hElLO"))
+
+(ert-deftest aim-op-downcase-line-doubled ()
+  "guu lowercases the whole line (doubled multi-key operator)."
+  (aim-test :initial "AB|C\nDEF\n" :keys "guu" :expect "|abc\nDEF\n"))
+
+(ert-deftest aim-op-upcase-line-doubled ()
+  (aim-test :initial "ab|c\ndef\n" :keys "gUU" :expect "|ABC\ndef\n"))
+
+(ert-deftest aim-op-swap-case-line-doubled ()
+  (aim-test :initial "aB|c\n" :keys "g~~" :expect "|AbC\n"))
+
+(ert-deftest aim-op-upcase-text-object ()
+  (aim-test :initial "foo (ba|r baz) qux" :keys "gUi(" :expect "foo (|BAR BAZ) qux"))
+
+(ert-deftest aim-op-case-visual ()
+  (aim-test :initial "|abc def" :keys "vllU" :expect "|ABC def"))
+
+(ert-deftest aim-op-reindent-line-doubled ()
+  (aim-test-with-buffer "x|yz"
+    (aim-mode 1)
+    (setq-local indent-line-function (lambda () (indent-line-to 4)))
+    (aim-test-keys "==")
+    (should (equal (buffer-string) "    xyz"))))
+
+(ert-deftest aim-op-reformat-wraps-line ()
+  "gqq reflows a long line to fill-column (was one line, now several)."
+  (aim-test-with-buffer "|one two three four five"
+    (aim-mode 1)
+    (setq-local fill-column 8)
+    (aim-test-keys "gqq")
+    (should (> (count-lines (point-min) (point-max)) 1))
+    (should-not (string-search " three four" (buffer-string)))))
+
+(ert-deftest aim-op-reformat-keep-point ()
+  "gw reflows but leaves point where it was."
+  (aim-test-with-buffer "a|aa bbb ccc ddd"
+    (aim-mode 1)
+    (setq-local fill-column 7)
+    (aim-test-keys "gwip")
+    (should (= (point) 2))))
+
+(ert-deftest aim-op-filter-line ()
+  "!! filters the current line through a shell command (mocked)."
+  (aim-test-with-buffer "|abc\ndef\n"
+    (aim-mode 1)
+    (cl-letf (((symbol-function 'read-shell-command) (lambda (&rest _) "up"))
+              ((symbol-function 'shell-command-on-region)
+               (lambda (b e _cmd _out _replace &rest _)
+                 (let ((s (upcase (buffer-substring b e))))
+                   (delete-region b e) (goto-char b) (insert s)))))
+      (aim-test-keys "!!"))
+    (should (equal (aim-test-buffer-state) "|ABC\ndef\n"))))
+
 ;;;; Operators
 
 (ert-deftest aim-op-delete-word ()

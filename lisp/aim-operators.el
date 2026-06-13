@@ -68,6 +68,71 @@ rectangle."
                (< (point) end))
     (goto-char beg)))
 
+;;;; Case
+
+(defun aim--swap-case-string (text)
+  "Return TEXT with the case of each character toggled."
+  (mapconcat (lambda (c)
+               (string (if (eq c (upcase c)) (downcase c) (upcase c))))
+             text))
+
+(aim-define-operator aim-downcase (beg end _type)
+  "Lowercase BEG..END (Vim's gu)."
+  (downcase-region beg end)
+  (goto-char beg))
+
+(aim-define-operator aim-upcase (beg end _type)
+  "Uppercase BEG..END (Vim's gU)."
+  (upcase-region beg end)
+  (goto-char beg))
+
+(aim-define-operator aim-swap-case (beg end _type)
+  "Toggle the case of BEG..END (Vim's g~)."
+  (let ((text (buffer-substring beg end)))
+    (delete-region beg end)
+    (goto-char beg)
+    (insert (aim--swap-case-string text))
+    (goto-char beg)))
+
+;;;; Reindent
+
+(aim-define-operator aim-reindent (beg end _type)
+  "Reindent the lines spanned by BEG..END (Vim's =)."
+  (indent-region beg end)
+  (goto-char beg)
+  (back-to-indentation))
+
+;;;; Reformat
+
+(aim-define-operator aim-reformat (beg end _type)
+  "Reflow BEG..END to `fill-column' (Vim's gq); point ends past it."
+  (let ((m (copy-marker end)))
+    (fill-region beg end)
+    (goto-char m)
+    (set-marker m nil)
+    (forward-line 0)
+    (back-to-indentation)))
+
+(aim-define-operator aim-reformat-keep (beg end _type)
+  "Reflow BEG..END to `fill-column' (Vim's gw); point stays put."
+  (save-excursion (fill-region beg end)))
+
+;;;; Filter
+
+(aim-define-operator aim-filter (beg end _type)
+  "Filter the lines spanned by BEG..END through a shell command (Vim's !)."
+  (let* ((cmd (read-shell-command "!"))
+         (b (copy-marker (save-excursion (goto-char beg)
+                                         (line-beginning-position))))
+         ;; A linewise range already ends at a line start; only a
+         ;; charwise end needs rounding up to the next line.
+         (e (save-excursion (goto-char end)
+                            (if (bolp) end (line-beginning-position 2)))))
+    (shell-command-on-region b e cmd nil t)
+    (goto-char b)
+    (set-marker b nil)
+    (back-to-indentation)))
+
 (defcustom aim-shift-width 4
   "Columns shifted by the > and < operators."
   :type 'natnum

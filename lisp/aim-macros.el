@@ -228,7 +228,7 @@ OP-KEYS and OPERATOR as there."
                ;; The doubled key first: its global binding is
                ;; irrelevant (it may resolve to `undefined' via the
                ;; self-insert remap).
-               ((equal (key-description keys) (key-description op-keys))
+               ((aim--operator-doubled-p keys op-keys)
                 (aim--operator-finish-transcript)
                 (throw 'aim--range
                        (aim--line-range (* op-count (or motion-count 1)))))
@@ -266,6 +266,17 @@ OP-KEYS and OPERATOR as there."
                 (user-error "Not a motion: %s" (key-description keys)))))))
       (when (eq aim-state 'operator-pending)
         (aim-switch-state 'normal)))))
+
+(defun aim--operator-doubled-p (keys op-keys)
+  "Non-nil when KEYS is the doubled (linewise) form of OP-KEYS.
+True when KEYS equals OP-KEYS, or equals OP-KEYS's final event — so a
+multi-key operator like `gu' takes its linewise form as `guu' (`g u'
+cannot also be a prefix for `g u u')."
+  (or (equal (key-description keys) (key-description op-keys))
+      (and (> (length op-keys) 1)
+           (equal (key-description keys)
+                  (key-description
+                   (vector (aref op-keys (1- (length op-keys)))))))))
 
 (defun aim--operator-finish-transcript ()
   "Publish the operator's key transcript for the repeat record."

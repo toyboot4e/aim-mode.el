@@ -108,6 +108,13 @@
   "V" #'aim-visual-line
   "C-v" #'aim-visual-block
   "g v" #'aim-visual-restore
+  "g u" #'aim-downcase
+  "g U" #'aim-upcase
+  "g ~" #'aim-swap-case
+  "g q" #'aim-reformat
+  "g w" #'aim-reformat-keep
+  "=" #'aim-reindent
+  "!" #'aim-filter
   "R" #'aim-replace-state
   "m" #'aim-set-marker
   "/" #'aim-search-forward
@@ -131,6 +138,13 @@
   "y" #'aim-yank
   ">" #'aim-shift-right
   "<" #'aim-shift-left
+  "u" #'aim-downcase
+  "U" #'aim-upcase
+  "~" #'aim-swap-case
+  "=" #'aim-reindent
+  "g q" #'aim-reformat
+  "g w" #'aim-reformat-keep
+  "!" #'aim-filter
   ":" #'aim-ex
   "p" #'aim-visual-paste
   "\"" #'aim-use-register)
