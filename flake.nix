@@ -25,6 +25,8 @@
           programs.nixfmt.enable = true;
         }
       );
+
+      emacsWithLint = forAllSystems (pkgs: pkgs.emacs.pkgs.withPackages (epkgs: [ epkgs.package-lint ]));
     in
     {
       # `nix run` launches a reproducible Emacs with aim-mode loaded.
@@ -46,7 +48,7 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           packages = [
-            (pkgs.emacs.pkgs.withPackages (epkgs: [ epkgs.package-lint ]))
+            emacsWithLint.${pkgs.system}
             pkgs.just
             treefmtEval.${pkgs.system}.config.build.wrapper
             pkgs.pinact
@@ -56,5 +58,22 @@
       });
 
       formatter = forAllSystems (pkgs: treefmtEval.${pkgs.system}.config.build.wrapper);
+
+      packages = forAllSystems (pkgs: {
+        tests =
+          pkgs.runCommand "aim-tests"
+            {
+              nativeBuildInputs = [
+                emacsWithLint.${pkgs.system}
+                pkgs.just
+              ];
+            }
+            ''
+              export HOME="$TMPDIR"
+              cp -R ${self} src && chmod -R u+w src && cd src
+              just ci
+              touch "$out"
+            '';
+      });
     };
 }

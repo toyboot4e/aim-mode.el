@@ -15,12 +15,12 @@ ci: compile lint test
 ci-nix:
     nix develop -c just ci
 
-# Staged byte-compilation with warnings as errors.
 [private]
 alias c := compile
+
+# Staged byte-compilation with warnings as errors.
+[script('bash', '-euo', 'pipefail')]
 compile:
-    #!/usr/bin/env bash
-    set -euo pipefail
     rm -rf "{{ stage }}" && mkdir -p "{{ stage }}"
     for layer in {{ layers }}; do
         cp "lisp/$layer.el" "{{ stage }}/"
@@ -30,17 +30,19 @@ compile:
         echo "compiled: $layer"
     done
 
-# Run the ERT suite in batch.
 [private]
 alias t := test
+
+# Run the ERT suite in batch.
 test:
     "{{ emacs }}" -Q --batch -L lisp -L test \
         -l aim-test-utils -l aim-mode-test \
         -f ert-run-tests-batch-and-exit
 
-# package-lint (fails CI) + checkdoc (informational for now).
 [private]
 alias l := lint
+
+# package-lint (fails CI) + checkdoc (informational for now).
 lint:
     "{{ emacs }}" -Q --batch -l package-lint \
         --eval '(setq package-lint-main-file "lisp/aim-mode.el")' \
@@ -48,33 +50,35 @@ lint:
     "{{ emacs }}" -Q --batch \
         --eval '(dolist (f (directory-files "lisp" t "\\.el$")) (checkdoc-file f))'
 
-# Format the tree (nixfmt under treefmt) via the flake formatter.
 [private]
 alias f := fmt
+
+# Format the tree (nixfmt under treefmt) via the flake formatter.
 fmt:
     nix fmt
 
-# zizmor security audit of the GitHub Actions workflows (offline, no token).
 [private]
 alias a := audit
+
+# zizmor security audit of the GitHub Actions workflows (offline, no token).
 audit:
     zizmor --offline .github/workflows
 
-# Verify Actions are pinned to SHAs matching their tags (needs network;
-# `pinact run --update` bumps and re-pins).
-[private]
+# Verify Actions are pinned to SHAs matching their tags (needs network; `pinact run --update` bumps and re-pins).
 pin-check:
     pinact run --check
 
-# Regenerate docs/KEYBINDINGS.md from the State keymaps.
 [private]
 alias d := docs
+
+# Regenerate docs/KEYBINDINGS.md from the State keymaps.
 docs:
     "{{ emacs }}" -Q --batch -L lisp -l script/gen-keybindings.el
 
-# Launch the playground Emacs (what `nix run` does, from the working tree).
 [private]
 alias r := run
+
+# Launch the playground Emacs (what `nix run` does, from the working tree).
 run:
     "{{ emacs }}" -Q -L lisp -l aim-mode --eval '(aim-playground)'
 
