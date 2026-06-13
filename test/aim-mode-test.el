@@ -444,6 +444,33 @@
     (should-error (aim-test-keys ":definitely-not-a-command RET")
                   :type 'user-error)))
 
+;;;; Substitute, join, paste-advance, gi
+
+(ert-deftest aim-cmd-substitute-char ()
+  (aim-test :initial "a|bcd" :keys "sX ESC" :expect "a|Xcd"))
+
+(ert-deftest aim-cmd-substitute-char-count ()
+  (aim-test :initial "a|bcde" :keys "3sX ESC" :expect "a|Xe"))
+
+(ert-deftest aim-cmd-substitute-line ()
+  (aim-test :initial "  ab|c\nd\n" :keys "SX ESC" :expect "  |X\nd\n"))
+
+(ert-deftest aim-cmd-join-no-space ()
+  (aim-test :initial "ab|c\ndef\n" :keys "gJ" :expect "abc|def\n"))
+
+(ert-deftest aim-cmd-paste-after-advance ()
+  (aim-test :initial "|abc" :keys "ylgp" :expect "aa|bc"))
+
+(ert-deftest aim-cmd-paste-line-advance ()
+  (aim-test :initial "|abc\ndef\n" :keys "yygp" :expect "abc\nabc\n|def\n"))
+
+(ert-deftest aim-cmd-substitute-char-repeat ()
+  (aim-test :initial "|abcd" :keys "sX ESC l." :expect "X|Xcd"))
+
+(ert-deftest aim-cmd-gi-returns-to-last-insert ()
+  "gi re-enters insert where insert was last left."
+  (aim-test :initial "|abc" :keys "A Z ESC g g g i Y ESC" :expect "abcZ|Y"))
+
 ;;;; Simple commands
 
 (ert-deftest aim-cmd-delete-char ()

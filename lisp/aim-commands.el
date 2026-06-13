@@ -113,10 +113,93 @@ rectangle at the cursor column."
       (dotimes (_ count) (insert text))
       (backward-char)))))
 
+(aim-define-command aim-paste-after-advance (count)
+  "Like `aim-paste-after' but leave point just after the paste (Vim's gp)."
+  :interactive "p"
+  (let ((text (aim--paste-text)))
+    (cond
+     ((eq (get-text-property 0 'aim-type text) 'block)
+      (unless (eolp) (forward-char))
+      (aim--insert-block text))
+     ((aim--text-linewise-p text)
+      (forward-line 1)
+      (unless (bolp) (insert "\n"))
+      (dotimes (_ count)
+        (insert text)
+        (unless (string-suffix-p "\n" text) (insert "\n"))))
+     (t
+      (unless (eolp) (forward-char))
+      (dotimes (_ count) (insert text))))))
+
+(aim-define-command aim-paste-before-advance (count)
+  "Like `aim-paste-before' but leave point just after the paste (Vim's gP)."
+  :interactive "p"
+  (let ((text (aim--paste-text)))
+    (cond
+     ((eq (get-text-property 0 'aim-type text) 'block)
+      (aim--insert-block text))
+     ((aim--text-linewise-p text)
+      (forward-line 0)
+      (dotimes (_ count)
+        (insert text)
+        (unless (string-suffix-p "\n" text) (insert "\n"))))
+     (t
+      (dotimes (_ count) (insert text))))))
+
 (defun aim-use-register ()
   "Select the register for the next kill or paste (Vim's \" prefix)."
   (interactive)
   (setq aim--pending-register (aim--read-char "\"-")))
+
+;;;; Substitute and join
+
+(aim-define-command aim-substitute-char (count)
+  "Delete COUNT characters and enter insert State (Vim's s)."
+  :interactive "p"
+  (aim--start-undo-session)
+  (let ((end (min (line-end-position) (+ (point) count))))
+    (when (< (point) end)
+      (kill-region (point) end)
+      (aim--kill-finish 'char)))
+  (aim-switch-state 'insert))
+
+(aim-define-command aim-substitute-line (count)
+  "Change COUNT whole lines, keeping indentation (Vim's S, like cc)."
+  :interactive "p"
+  (let ((indent (buffer-substring (line-beginning-position)
+                                  (save-excursion (back-to-indentation) (point)))))
+    (aim--start-undo-session)
+    (kill-region (line-beginning-position) (line-beginning-position (1+ count)))
+    (aim--kill-finish 'line)
+    (insert indent "\n")
+    (backward-char)
+    (aim-switch-state 'insert)))
+
+(aim-define-command aim-join-lines-no-space (count)
+  "Join COUNT lines without inserting a space (Vim's gJ)."
+  :interactive "p"
+  (dotimes (_ (max 1 (1- (max count 2))))
+    (goto-char (line-end-position))
+    (unless (eobp) (delete-char 1))))
+
+;;;; Insert at last edit (gi)
+
+(defvar-local aim--last-insert-pos nil
+  "Marker at the point of the last insert-State command, for `gi'.")
+
+(defun aim--track-insert-pos ()
+  "Remember point while in insert State; runs on `post-command-hook'."
+  (when (eq aim-state 'insert)
+    (setq aim--last-insert-pos (point-marker))))
+
+(add-hook 'post-command-hook #'aim--track-insert-pos)
+
+(aim-define-command aim-insert-at-last-edit ()
+  "Re-enter insert State where insert was last left (Vim's gi)."
+  (when (and (markerp aim--last-insert-pos)
+             (marker-position aim--last-insert-pos))
+    (goto-char aim--last-insert-pos))
+  (aim-switch-state 'insert))
 
 (aim-define-command aim-kill-line-rest (count)
   "Kill to the end of the line, COUNT - 1 lines below (Vim's D)."

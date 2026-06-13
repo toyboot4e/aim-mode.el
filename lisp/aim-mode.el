@@ -113,6 +113,12 @@
   "g ~" #'aim-swap-case
   "g q" #'aim-reformat
   "g w" #'aim-reformat-keep
+  "g p" #'aim-paste-after-advance
+  "g P" #'aim-paste-before-advance
+  "g J" #'aim-join-lines-no-space
+  "g i" #'aim-insert-at-last-edit
+  "s" #'aim-substitute-char
+  "S" #'aim-substitute-line
   "=" #'aim-reindent
   "!" #'aim-filter
   "R" #'aim-replace-state
