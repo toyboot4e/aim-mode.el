@@ -43,20 +43,28 @@ property; text killed by other Emacs commands has none, so paste guesses
 from a trailing newline. Inherent to sharing the kill-ring
 (docs/adr/0002).
 
+### Text objects are not context-aware
+
+Pair (`i(`), quote (`i"`) and tag (`it`) objects scan characters with
+nesting/balance counting; they do not skip delimiters inside strings or
+comments, escaped delimiters, etc. This matches Vim's own text objects,
+which are char-based and not syntax-aware without plugins. Structural
+awareness is deliberately left to the user side (e.g. tree-sitter),
+keeping the objects small and dependency-free.
+
 ## Temporary
 
 ### `.` ignores the register prefix
 
 `"adw` repeats as `dw`: the `"` prefix is a separate command whose
-register does not enter the repeat record. Fix when repeat learns about
-prefix state; no milestone committed yet.
+register does not enter the repeat record. Fix scheduled for **0.14**.
 
 ### Block change does not replicate insertion
 
 `c` on a block selection deletes the rectangle and inserts on the first
 line only; Vim replays the insertion on every line of the block when
-leaving insert. Paste over a block selection is also unsupported.
-Planned for the 1.0 completeness pass.
+leaving insert. Paste over a block selection is also unsupported. Both
+fixed in **0.13** (with block `I`/`A` and the rectangle highlight).
 
 ### Block selection highlights linearly
 
@@ -64,11 +72,4 @@ Charwise and linewise visual selections are drawn by a dedicated
 overlay matching the true Vim range (inclusive / whole-line). Block
 (`C-v`) still shows the plain region — a linear span from the first
 corner to the last, not the rectangle that operators actually act on.
-A per-line rectangle highlight is its own task.
-
-### Pair and quote objects are context-blind
-
-`i(`/`a"`-style objects scan characters directly: escaped characters
-(`\"`) and pairs inside strings or comments are not recognized as
-special. Syntax-aware scanning can come with later polish; no milestone
-committed yet.
+Per-line rectangle highlight scheduled for **0.13**.

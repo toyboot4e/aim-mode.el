@@ -40,10 +40,45 @@ Done so far:
   an `input-decode-map` filter. Curated `aim-x-*.el` modules deferred
   until concrete per-mode preferences exist.
 
-## 1.0 — Common Core completeness
+## Toward 1.0 — exhaustive daily-driver parity
 
-- Feature-complete against CONTEXT.md's Common Core definition: audit
-  motions/operators/text objects/counts against everyday Vim usage.
-- Repeat works for every editing command; no temporary caveats left in
-  docs/CAVEATS.md.
-- Documentation pass; MELPA-ready packaging.
+1.0 means feature-complete against everyday Vim usage (CONTEXT.md's
+Common Core), reached over several Milestones. Every feature below is a
+Leaf built on the public API (`aim-define-operator/motion/command/
+text-object` + `aim-define-key`) — never in `aim-core.el`, no Kernel
+additions except the one repeat fix in 0.14. Each Milestone self-tests
+and ships green.
+
+- **0.10 — operators**: case `gu` `gU` `g~` (+ doubled linewise forms,
+  + visual `u` `U` `~`); `=` reindent (+ `==` + visual); `gq`/`gw`
+  reformat; `!` filter through a shell command.
+- **0.11 — commands & small motions**: `s`/`S`, `gJ` (join no space);
+  `gp`/`gP` (paste and advance); `gi` (insert at last edit position);
+  `&`/`g&` (repeat `:s`); `ZZ`/`ZQ`; increment/decrement commands bound
+  to `C-a` and `g C-x` (the Emacs `C-x` prefix is preserved — a
+  case-by-case call per ADR 0001); motions `gj` `gk` `g_` `|` `+` `-`
+  `_`, and section motions `[[` `]]` `[]` `][`.
+- **0.12 — text objects**: tag `it`/`at` (nested char-based matching)
+  and sentence `is`/`as`. Objects stay char-scan by design (see
+  CAVEATS); structural awareness is left to user-side tree-sitter.
+- **0.13 — block completion**: block `I`/`A` insert replicated down the
+  block; block `c` replicated; visual `p` over a block selection; a
+  per-line rectangle highlight. Clears all block caveats.
+- **0.14 — repeat fix**: the `"` register prefix enters the repeat
+  record, so `"adw` repeats faithfully (clears that caveat). The one
+  Kernel change in the 1.0 run.
+- **0.15 — docs & packaging**: expand README; add a generated
+  `docs/KEYBINDINGS.md` (every binding per State, derived from the
+  keymaps so it cannot drift) and `docs/VIM-COMPARISON.md` (coverage
+  and deliberate divergences, cross-referencing CAVEATS); make the
+  package MELPA-ready (package-lint clean, autoload audit, metadata).
+  Actual MELPA submission is a manual step (needs the public repo and a
+  recipe PR).
+
+Deferred past 1.0: changelist `g;`/`g,`; Vim-style insert-State chords
+(insert State stays plain Emacs, whose built-ins are the equivalents).
+
+## 1.0 — release
+
+Tag once 0.10–0.15 have shipped and docs/CAVEATS.md holds only
+permanent (by-design) entries — no unresolved temporary caveats.
