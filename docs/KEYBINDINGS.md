@@ -283,6 +283,7 @@ Command names are shown without the `aim-` prefix.
 | Key | Command |
 |-----|---------|
 | `<escape>` | normal-state |
+| `C-w` | backward-kill-word |
 | `ESC` | normal-state |
 
 ## Replace State
@@ -290,5 +291,6 @@ Command names are shown without the `aim-` prefix.
 | Key | Command |
 |-----|---------|
 | `<escape>` | normal-state |
+| `C-w` | backward-kill-word |
 | `DEL` | replace-backspace |
 | `ESC` | normal-state |

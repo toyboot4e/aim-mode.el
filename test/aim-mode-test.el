@@ -810,6 +810,15 @@
           (should (equal (aim-test-buffer-state) "|abc"))))
     (remhash '(normal . text-mode) aim--aux-maps)))
 
+;;;; Insert-State chords
+
+(ert-deftest aim-insert-c-w-deletes-word ()
+  "C-w in insert State deletes the word before point (Vim)."
+  (aim-test :initial "|" :keys "ione SPC two C-w ESC" :expect "one| "))
+
+(ert-deftest aim-insert-c-w-only-word ()
+  (aim-test :initial "|" :keys "ifoo C-w ESC" :expect "|"))
+
 ;;;; Replace State
 
 (ert-deftest aim-replace-overwrites ()

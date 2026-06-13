@@ -51,7 +51,8 @@ These are by design (see CAVEATS.md for the full rationale):
 ## Out of scope (deferred past 1.0)
 
 - Changelist `g;`/`g,`.
-- Vim-style insert-State chords — insert State is plain Emacs, whose
-  built-ins (`C-w`, `C-y`, `M-DEL`, …) are the equivalents.
+- Vim-style insert-State chords beyond `C-w` (word delete, which *is*
+  bound). Insert State is otherwise plain Emacs, whose built-ins
+  (`C-y`, `M-DEL`, …) are the equivalents.
 - The ex *language* beyond the dispatcher whitelist (`:g`, `:normal`,
   marks-in-ranges, …) — use the `:(sexp)` escape hatch or M-x.

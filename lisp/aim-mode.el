@@ -185,6 +185,11 @@
   (keymap-set aim-visual-state-map key #'aim-visual-exit))
 (keymap-set aim-replace-state-map "DEL" #'aim-replace-backspace)
 
+;; Vim's insert-State C-w deletes the word before point (Emacs's C-w is
+;; kill-region).  Other insert chords stay plain Emacs (see CAVEATS).
+(keymap-set aim-insert-state-map "C-w" #'backward-kill-word)
+(keymap-set aim-replace-state-map "C-w" #'backward-kill-word)
+
 ;; Text objects, read in operator-pending State.
 (dolist (entry '(("w" . "word")
                  ("W" . "bigword")
