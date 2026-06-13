@@ -54,6 +54,17 @@
   "^" #'aim-first-non-blank
   "$" #'aim-line-end
   "g g" #'aim-goto-first-line
+  "g j" #'aim-next-visual-line
+  "g k" #'aim-previous-visual-line
+  "g _" #'aim-last-non-blank
+  "|" #'aim-goto-column
+  "+" #'aim-next-line-non-blank
+  "-" #'aim-previous-line-non-blank
+  "_" #'aim-current-line-non-blank
+  "[ [" #'aim-backward-section
+  "] ]" #'aim-forward-section
+  "[ ]" #'aim-backward-section-end
+  "] [" #'aim-forward-section-end
   "G" #'aim-goto-line
   "f" #'aim-find-char
   "F" #'aim-find-char-backward

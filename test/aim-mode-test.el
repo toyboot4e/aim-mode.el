@@ -444,6 +444,38 @@
     (should-error (aim-test-keys ":definitely-not-a-command RET")
                   :type 'user-error)))
 
+;;;; Small motions
+
+(ert-deftest aim-motion-last-non-blank ()
+  (aim-test :initial "|ab cd  " :keys "g_" :expect "ab c|d  "))
+
+(ert-deftest aim-motion-goto-column ()
+  (aim-test :initial "|abcde" :keys "3|" :expect "ab|cde"))
+
+(ert-deftest aim-motion-next-line-non-blank ()
+  (aim-test :initial "ab|c\n  def\n" :keys "+" :expect "abc\n  |def\n"))
+
+(ert-deftest aim-motion-previous-line-non-blank ()
+  (aim-test :initial "  abc\nde|f\n" :keys "-" :expect "  |abc\ndef\n"))
+
+(ert-deftest aim-motion-visual-line-down ()
+  "gj moves down a display line (column-keeping needs a real display)."
+  (aim-test-with-buffer "abc\nde|f\nghi\n"
+    (aim-mode 1)
+    (aim-test-keys "gj")
+    (should (= (line-number-at-pos) 3))))
+
+(ert-deftest aim-op-last-non-blank ()
+  "dg_ deletes through the last non-blank, inclusively."
+  (aim-test :initial "|abc  " :keys "dg_" :expect "|  "))
+
+(ert-deftest aim-motion-section-forward ()
+  (aim-test-with-buffer "|(defun a ())\n(defun b ())\n"
+    (emacs-lisp-mode)
+    (aim-mode 1)
+    (aim-test-keys "]]")
+    (should (= (line-number-at-pos) 2))))
+
 ;;;; Increment / decrement
 
 (ert-deftest aim-cmd-increment ()

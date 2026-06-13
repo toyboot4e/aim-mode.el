@@ -62,6 +62,70 @@ from, so travelling through a short line does not lose it."
     (forward-line (1- count)))
   (goto-char (line-end-position)))
 
+(aim-define-motion aim-last-non-blank (count)
+  "Move onto the last non-blank char, COUNT - 1 lines below (Vim's g_)."
+  :type inclusive
+  (when (> count 1)
+    (forward-line (1- count)))
+  (goto-char (line-end-position))
+  (skip-chars-backward " \t")
+  (unless (bolp) (backward-char)))
+
+(aim-define-motion aim-goto-column (count)
+  "Move to column COUNT on this line (1-based; Vim's |)."
+  (forward-line 0)
+  (move-to-column (1- count)))
+
+(aim-define-motion aim-next-line-non-blank (count)
+  "Move to the first non-blank of the COUNTth next line (Vim's +)."
+  :type linewise
+  (forward-line count)
+  (back-to-indentation))
+
+(aim-define-motion aim-previous-line-non-blank (count)
+  "Move to the first non-blank of the COUNTth previous line (Vim's -)."
+  :type linewise
+  (forward-line (- count))
+  (back-to-indentation))
+
+(aim-define-motion aim-current-line-non-blank (count)
+  "Move to the first non-blank, COUNT - 1 lines down (Vim's _)."
+  :type linewise
+  (forward-line (1- count))
+  (back-to-indentation))
+
+(aim-define-motion aim-next-visual-line (count)
+  "Move COUNT display lines down, keeping the column (Vim's gj)."
+  (line-move-visual count t))
+
+(aim-define-motion aim-previous-visual-line (count)
+  "Move COUNT display lines up, keeping the column (Vim's gk)."
+  (line-move-visual (- count) t))
+
+;;;; Section motions
+;; Mapped onto Emacs's defun motions (Vim's sections are file-type
+;; specific; defun boundaries are the closest portable analogue).
+
+(aim-define-motion aim-backward-section (count)
+  "Move back to the start of a section/defun (Vim's [[)."
+  :type exclusive
+  (beginning-of-defun count))
+
+(aim-define-motion aim-forward-section (count)
+  "Move forward to the start of a section/defun (Vim's ]])."
+  :type exclusive
+  (beginning-of-defun (- count)))
+
+(aim-define-motion aim-backward-section-end (count)
+  "Move back to the end of a section/defun (Vim's [])."
+  :type exclusive
+  (end-of-defun (- count)))
+
+(aim-define-motion aim-forward-section-end (count)
+  "Move forward to the end of a section/defun (Vim's ][)."
+  :type exclusive
+  (end-of-defun count))
+
 ;;;; Word motions
 
 (aim-define-motion aim-forward-word-begin (count)
