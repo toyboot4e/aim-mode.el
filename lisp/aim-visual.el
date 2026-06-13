@@ -99,7 +99,7 @@ LINES is a list of line numbers; APPEND pads short lines to COL."
     (aim--begin-block-insert col (number-sequence (1+ l1) l2) append)))
 
 (defun aim--block-insert-track ()
-  "Track and finish a block insert; runs on `post-command-hook'."
+  "Track and finish a block insert (a `post-command-hook' function)."
   (when aim--block-insert
     (if (eq aim-state 'insert)
         (setq aim--block-insert-end (point-marker))
@@ -199,14 +199,14 @@ LINES is a list of line numbers; APPEND pads short lines to COL."
     (_ (user-error "No previous selection"))))
 
 (defun aim--visual-kill-rectangle (beg end)
-  "Delete the BEG..END rectangle into the kill-ring, block-tagged."
+  "Delete the BEG..END rectangle into the `kill-ring', block-tagged."
   (kill-new (propertize (mapconcat #'identity
                                    (delete-extract-rectangle beg end) "\n")
                         'aim-type 'block)))
 
 (defun aim-visual-paste (_count)
   "Replace the selection with a paste.
-The replaced text goes to the kill-ring, like Vim."
+The replaced text goes to the `kill-ring', like Vim."
   (interactive "p")
   (let* ((range (aim--visual-range))
          (text (aim--paste-text)))

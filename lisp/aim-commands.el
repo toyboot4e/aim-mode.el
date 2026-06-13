@@ -223,7 +223,7 @@ Leave point on the last digit of the result, like Vim."
   "Marker at the point of the last insert-State command, for `gi'.")
 
 (defun aim--track-insert-pos ()
-  "Remember point while in insert State; runs on `post-command-hook'."
+  "Remember point while in insert State (a `post-command-hook' function)."
   (when (eq aim-state 'insert)
     (setq aim--last-insert-pos (point-marker))))
 

@@ -45,6 +45,12 @@ lint:
     "{{ emacs }}" -Q --batch \
         --eval '(dolist (f (directory-files "lisp" t "\\.el$")) (checkdoc-file f))'
 
+# Regenerate docs/KEYBINDINGS.md from the State keymaps.
+[private]
+alias d := docs
+docs:
+    "{{ emacs }}" -Q --batch -L lisp -l script/gen-keybindings.el
+
 # Launch the playground Emacs (what `nix run` does, from the working tree).
 [private]
 alias r := run

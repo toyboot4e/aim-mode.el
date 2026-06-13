@@ -136,12 +136,12 @@ SUFFIX names them aim-inner-SUFFIX / aim-outer-SUFFIX."
 
 ;;;; Quotes
 
-(defun aim--quote-range (quote around)
-  "Range of QUOTE-delimited text on the current line.
+(defun aim--quote-range (qchar around)
+  "Range of text delimited by QCHAR on the current line.
 Quotes pair up from the start of the line; the first pair ending at
 or after point is used.  Inner range excludes the quotes; AROUND
 includes them plus trailing blanks (or leading ones without any)."
-  (let ((str (char-to-string quote))
+  (let ((str (char-to-string qchar))
         (positions nil)
         (pair nil))
     (save-excursion
@@ -170,16 +170,16 @@ includes them plus trailing blanks (or leading ones without any)."
                   e)))
       (cons (1+ (car pair)) (cdr pair)))))
 
-(defmacro aim--define-quote-objects (char suffix)
-  "Define inner and outer text objects for CHAR-quoted text.
+(defmacro aim--define-quote-objects (qchar suffix)
+  "Define inner and outer text objects for text quoted by QCHAR.
 SUFFIX names them aim-inner-SUFFIX / aim-outer-SUFFIX."
   `(progn
      (aim-define-text-object ,(intern (format "aim-inner-%s" suffix)) (_count)
-       ,(format "Inside %c-quoted text on the current line." char)
-       (aim--quote-range ,char nil))
+       ,(format "Inside %c-quoted text on the current line." qchar)
+       (aim--quote-range ,qchar nil))
      (aim-define-text-object ,(intern (format "aim-outer-%s" suffix)) (_count)
-       ,(format "%c-quoted text on the current line, quotes included." char)
-       (aim--quote-range ,char t))))
+       ,(format "%c-quoted text on the current line, quotes included." qchar)
+       (aim--quote-range ,qchar t))))
 
 (aim--define-quote-objects ?\" "double-quote")
 (aim--define-quote-objects ?\' "single-quote")

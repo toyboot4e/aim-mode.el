@@ -54,7 +54,7 @@ PROMPT is passed to `read-char'."
     ch))
 
 (defun aim--repeat-post-command ()
-  "Record repeatable commands; runs on `post-command-hook'."
+  "Record repeatable commands (a `post-command-hook' function)."
   (cond
    (aim--repeating nil)
    ;; A prefix command (digit-argument...) just ran: skip.  It restores

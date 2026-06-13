@@ -11,7 +11,7 @@
 (require 'rect)
 
 (defun aim--kill-rectangle (beg end)
-  "Delete the BEG..END rectangle into the kill-ring, block-tagged."
+  "Delete the BEG..END rectangle into the `kill-ring', block-tagged."
   (kill-new (propertize (mapconcat #'identity
                                    (delete-extract-rectangle beg end)
                                    "\n")
@@ -52,7 +52,7 @@ insertion form a single undo step."
     (aim-switch-state 'insert)))
 
 (aim-define-operator aim-yank (beg end type)
-  "Copy from BEG to END into the kill-ring.
+  "Copy from BEG to END into the `kill-ring'.
 Point moves to BEG, except for a linewise yank that already contains
 point, which stays put (like `yy').  A block TYPE copies the
 rectangle."

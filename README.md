@@ -2,12 +2,46 @@
 
 Yet another Vim mode for Emacs: Vim's everyday grammar (the *Common Core*)
 guaranteed, Emacs's own subsystems (isearch, kill-ring, registers, kmacro,
-undo) underneath.
+undo) underneath. A small layered Kernel with orthogonal Leaves; zero
+external dependencies; Emacs 30.1+.
 
-Design documents: [CONTEXT.md](./CONTEXT.md) (glossary),
-[docs/adr/](./docs/adr/) (architecture decisions),
-[docs/ROADMAP.md](./docs/ROADMAP.md) (milestones), and
-[docs/CAVEATS.md](./docs/CAVEATS.md) (known divergences).
+## Philosophy
+
+- **Common Core, not full emulation.** The everyday Vim vocabulary —
+  motions, operators, counts, text objects and their compositions — is
+  guaranteed to match Vim. Outside it there is no compatibility promise.
+- **Reuse Emacs, don't reimplement it.** Undo, search, registers,
+  macros and marks are thin glue over the Emacs subsystems, so they
+  interoperate with the rest of your config. Consequently `:s///` and
+  `/` use Emacs regular expressions, not Vim's.
+- **Built on a public API.** Every command is defined through
+  `aim-define-operator` / `aim-define-motion` / `aim-define-command` /
+  `aim-define-text-object` and bound with `aim-define-key` — the same
+  tools you'd use to extend it.
+
+## Status
+
+Approaching 1.0 (exhaustive Common Core coverage). See
+[docs/ROADMAP.md](./docs/ROADMAP.md).
+
+## Documentation
+
+- [docs/VIM-COMPARISON.md](./docs/VIM-COMPARISON.md) — what's covered and
+  how it differs from Vim.
+- [docs/KEYBINDINGS.md](./docs/KEYBINDINGS.md) — every binding per State
+  (generated from the keymaps).
+- [CONTEXT.md](./CONTEXT.md) — project glossary.
+- [docs/adr/](./docs/adr/) — architecture decisions.
+- [docs/CAVEATS.md](./docs/CAVEATS.md) — known/by-design divergences.
+
+## Install
+
+Emacs 30.1+. With a checkout on `load-path`:
+
+```elisp
+(require 'aim-mode)
+(aim-global-mode 1)          ; enable everywhere, or M-x aim-mode per buffer
+```
 
 ## Try it
 
