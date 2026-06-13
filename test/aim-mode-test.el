@@ -680,10 +680,37 @@
     (should-not aim--visual-overlays)))
 
 (ert-deftest aim-visual-block-rectangle-highlight ()
-  "Block selection shows one overlay per spanned line."
+  "An ordinary block is highlighted by Emacs's own `rectangle-mark-mode'.
+aim adds a one-cell overlay per row at the inclusive trailing column."
   (aim-test-with-buffer "|abc\ndef\nghi\n"
     (aim-mode 1)
     (aim-test-keys "C-v j j l")         ; 3 lines x 2 columns
+    (should rectangle-mark-mode)
+    (should (region-active-p))
+    ;; One trailing-column overlay per spanned line; the native rectangle
+    ;; draws the rest of each row.
+    (should (= (length aim--visual-overlays) 3))))
+
+(ert-deftest aim-visual-block-highlights-cursor-column ()
+  "Entering block State highlights the cursor's column before any movement."
+  (aim-test-with-buffer "|abc\ndef\n"
+    (aim-mode 1)
+    (aim-test-keys "C-v")               ; no movement: a 1x1 block
+    (should (= (length aim--visual-overlays) 1))
+    (let ((ov (car aim--visual-overlays)))
+      ;; Covers exactly the character under the cursor (\"a\").
+      (should (= (overlay-start ov) (point)))
+      (should (= (overlay-end ov) (1+ (point)))))))
+
+(ert-deftest aim-visual-block-ragged-highlight ()
+  "A ragged `$' block falls back to manual per-line overlays.
+No rectangle can express a right edge that runs to each line's end,
+so `rectangle-mark-mode' steps aside and aim draws one overlay per line."
+  (aim-test-with-buffer "|abc\ndef\nghi\n"
+    (aim-mode 1)
+    (aim-test-keys "C-v j j $")
+    (should aim--visual-block-to-eol)
+    (should-not rectangle-mark-mode)
     (should (= (length aim--visual-overlays) 3))))
 
 (ert-deftest aim-visual-shift ()

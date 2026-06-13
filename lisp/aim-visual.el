@@ -10,12 +10,22 @@
 ;;
 ;; Emacs's region is exclusive at its larger end and char-granular,
 ;; while Vim's visual selection is inclusive (charwise) or whole-line
-;; (linewise).  So the live highlight is drawn by a dedicated overlay
-;; over the true `aim--visual-range', recomputed after each command;
-;; the mark stays active underneath for region-command integration
-;; (the overlay is always a superset, so the two same-face highlights
-;; simply union).  Block selections keep the plain-region highlight for
-;; now (see docs/CAVEATS.md).
+;; (linewise).  So the char/line highlight is drawn by a dedicated
+;; overlay over the true `aim--visual-range', recomputed after each
+;; command; the mark stays active underneath for region-command
+;; integration (the overlay is always a superset, so the two same-face
+;; highlights simply union).
+;;
+;; Block selections reuse Emacs's own `rectangle-mark-mode' for the
+;; rectangle highlight (docs/adr/0002): `aim--sync-block-highlight'
+;; turns it on for block, off otherwise.  Its highlight is exclusive at
+;; the right, while Vim's block is inclusive, so `aim--visual-update'
+;; adds a one-cell overlay at the trailing column (this is also what
+;; shows the cursor's column before any movement).  The ragged `$' block
+;; (`aim--visual-block-to-eol') is the further exception whose per-line
+;; right edge no rectangle can express -- there `aim--highlight-region'
+;; suppresses the native highlight and `aim--visual-update' draws the
+;; whole row to its end instead.
 
 ;;; Code:
 
@@ -24,7 +34,9 @@
 
 (defvar-local aim--visual-overlays nil
   "Overlays showing the true Vim selection while in visual State.
-A list: one overlay for char/line, one per line for block.")
+A list: one overlay for char/line; one per line for a block (the
+inclusive trailing column on top of `rectangle-mark-mode', or the
+ragged right edge of a `$' block).")
 
 (defvar-local aim--visual-block-to-eol nil
   "Non-nil when `$' has made a block selection ragged to each line's end.")
@@ -44,22 +56,30 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
   (when (and (eq aim-state 'visual) (mark t))
     (pcase aim--visual-kind
       ('block
+       ;; `rectangle-mark-mode' draws the bulk of the rectangle, but its
+       ;; highlight is exclusive at the right -- columns [left, max) -- so it
+       ;; shows nothing under the cursor on entry (mark = point).  Vim's block
+       ;; is inclusive, so we add a one-cell overlay at the trailing column
+       ;; [max, max+1] on each row; the two `region' highlights union into a
+       ;; full inclusive rectangle.  A ragged `$' block instead suppresses the
+       ;; native highlight (see `aim--highlight-region') and draws each row
+       ;; from `left' to its own end, which no rectangle can express.
        (let* ((m (mark)) (p (point))
               (c1 (save-excursion (goto-char m) (current-column)))
               (c2 (save-excursion (goto-char p) (current-column)))
               (left (min c1 c2))
-              (right (1+ (max c1 c2)))
+              (right (max c1 c2))
               (l1 (line-number-at-pos (min m p)))
               (l2 (line-number-at-pos (max m p))))
          (save-excursion
            (goto-char (point-min))
            (forward-line (1- l1))
            (dotimes (_ (1+ (- l2 l1)))
-             (move-to-column left)
+             (move-to-column (if aim--visual-block-to-eol left right))
              (let ((s (point)))
                (if aim--visual-block-to-eol
                    (goto-char (line-end-position))
-                 (move-to-column right))
+                 (move-to-column (1+ right)))
                (when (> (point) s)
                  (aim--visual-make-overlay s (point))))
              (forward-line 1)))))
@@ -68,6 +88,33 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
          (aim--visual-make-overlay beg end))))))
 
 (add-hook 'post-command-hook #'aim--visual-update)
+
+(defun aim--highlight-region (start end window rol)
+  "Highlight the region from START to END in WINDOW, reusing overlay ROL.
+Installed buffer-locally as `redisplay-highlight-region-function'.
+For a ragged block (`aim--visual-block-to-eol') it removes the native
+highlight ROL and returns nil, leaving the per-line overlays from
+`aim--visual-update' to show the right edge; otherwise it delegates to
+the global value (Emacs's own rectangle/region drawer)."
+  (if (and (eq aim-state 'visual)
+           (eq aim--visual-kind 'block)
+           aim--visual-block-to-eol)
+      (progn (funcall redisplay-unhighlight-region-function rol) nil)
+    (funcall (default-value 'redisplay-highlight-region-function)
+             start end window rol)))
+
+(defun aim--sync-block-highlight ()
+  "Sync `rectangle-mark-mode' to the current visual selection kind.
+Enable it for a block selection (so Emacs draws the rectangle) and
+disable it otherwise.  Activating the mark keeps the region live for
+highlighting even when the user has `transient-mark-mode' off."
+  (cond
+   ((and (eq aim-state 'visual) (eq aim--visual-kind 'block))
+    (unless (local-variable-p 'redisplay-highlight-region-function)
+      (setq-local redisplay-highlight-region-function #'aim--highlight-region))
+    (activate-mark)
+    (unless rectangle-mark-mode (rectangle-mark-mode 1)))
+   (rectangle-mark-mode (rectangle-mark-mode -1))))
 
 ;;;; Block insert (I / A)
 ;; The text typed on the first line is replicated at the same column on
@@ -157,12 +204,15 @@ With APPEND and a `$'-extended block, append at each line's own end."
   (cond ((and (eq aim-state 'visual) (eq aim--visual-kind 'char))
          (aim--visual-leave))
         ((eq aim-state 'visual)
-         (setq aim--visual-kind 'char))
+         (setq aim--visual-kind 'char)
+         (aim--sync-block-highlight))
         (t
          (setq aim--visual-kind 'char)
          (setq aim--visual-block-to-eol nil)
          (set-mark (point))
-         (aim-switch-state 'visual))))
+         (activate-mark)
+         (aim-switch-state 'visual)
+         (aim--sync-block-highlight))))
 
 (defun aim-visual-line ()
   "Start a linewise visual selection; toggle it off when active."
@@ -170,12 +220,15 @@ With APPEND and a `$'-extended block, append at each line's own end."
   (cond ((and (eq aim-state 'visual) (eq aim--visual-kind 'line))
          (aim--visual-leave))
         ((eq aim-state 'visual)
-         (setq aim--visual-kind 'line))
+         (setq aim--visual-kind 'line)
+         (aim--sync-block-highlight))
         (t
          (setq aim--visual-kind 'line)
          (setq aim--visual-block-to-eol nil)
          (set-mark (point))
-         (aim-switch-state 'visual))))
+         (activate-mark)
+         (aim-switch-state 'visual)
+         (aim--sync-block-highlight))))
 
 (defun aim-visual-block ()
   "Start a blockwise visual selection; toggle it off when active."
@@ -183,18 +236,25 @@ With APPEND and a `$'-extended block, append at each line's own end."
   (cond ((and (eq aim-state 'visual) (eq aim--visual-kind 'block))
          (aim--visual-leave))
         ((eq aim-state 'visual)
-         (setq aim--visual-kind 'block))
+         (setq aim--visual-kind 'block)
+         (aim--sync-block-highlight))
         (t
          (setq aim--visual-kind 'block)
          (setq aim--visual-block-to-eol nil)
          (set-mark (point))
-         (aim-switch-state 'visual))))
+         (activate-mark)
+         (aim-switch-state 'visual)
+         (aim--sync-block-highlight))))
 
 (defun aim-visual-end-of-line ()
   "Move to end of line; in a block, make the right edge ragged (Vim's $)."
   (interactive)
   (when (eq aim--visual-kind 'block)
-    (setq aim--visual-block-to-eol t))
+    (setq aim--visual-block-to-eol t)
+    ;; Hand the highlight to the manual per-line overlays: no rectangle can
+    ;; draw a ragged right edge.  `aim--highlight-region' suppresses the
+    ;; native region while `aim--visual-block-to-eol' is set.
+    (when rectangle-mark-mode (rectangle-mark-mode -1)))
   (goto-char (line-end-position)))
 
 (defun aim-visual-exit ()
@@ -214,8 +274,10 @@ With APPEND and a `$'-extended block, append at each line's own end."
     (`(,m ,p ,kind)
      (setq aim--visual-kind kind)
      (set-mark m)
+     (activate-mark)
      (goto-char p)
-     (aim-switch-state 'visual))
+     (aim-switch-state 'visual)
+     (aim--sync-block-highlight))
     (_ (user-error "No previous selection"))))
 
 (defun aim--visual-kill-rectangle (beg end)
