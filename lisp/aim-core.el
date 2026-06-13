@@ -366,11 +366,14 @@ text killed outside aim-mode."
   "Last visual selection, as (MARK POINT KIND), for `gv'.")
 
 (defun aim--visual-leave ()
-  "Leave visual State for normal State, remembering the selection."
+  "Leave visual State for normal State, remembering the selection.
+Switch State before deactivating the mark: `deactivate-mark' runs
+`deactivate-mark-hook', and `aim--visual-deactivate' there keys off
+`aim-state', so leaving first keeps that hook from re-entering."
   (when (eq aim-state 'visual)
     (setq aim--last-visual (list (mark) (point) aim--visual-kind)))
-  (deactivate-mark)
-  (aim-switch-state 'normal))
+  (aim-switch-state 'normal)
+  (deactivate-mark))
 
 ;;;; Replace-State bookkeeping
 ;; Typed characters overwrite via `overwrite-mode'; the characters they

@@ -702,6 +702,28 @@ aim adds a one-cell overlay per row at the inclusive trailing column."
       (should (= (overlay-start ov) (point)))
       (should (= (overlay-end ov) (1+ (point)))))))
 
+(ert-deftest aim-visual-quit-leaves-state ()
+  "Deactivating the region (what C-g does) exits visual State and clears it."
+  (aim-test-with-buffer "|abcdef\n"
+    (aim-mode 1)
+    (aim-test-keys "v l l")
+    (should (eq aim-state 'visual))
+    (should aim--visual-overlays)
+    (deactivate-mark)                   ; `keyboard-quit' deactivates the mark
+    (should (eq aim-state 'normal))
+    (should-not aim--visual-overlays)))
+
+(ert-deftest aim-visual-block-quit-leaves-state ()
+  "C-g in a block selection also exits and turns off `rectangle-mark-mode'."
+  (aim-test-with-buffer "|abc\ndef\n"
+    (aim-mode 1)
+    (aim-test-keys "C-v j l")
+    (should rectangle-mark-mode)
+    (deactivate-mark)
+    (should (eq aim-state 'normal))
+    (should-not rectangle-mark-mode)
+    (should-not aim--visual-overlays)))
+
 (ert-deftest aim-visual-block-ragged-highlight ()
   "A ragged `$' block falls back to manual per-line overlays.
 No rectangle can express a right edge that runs to each line's end,

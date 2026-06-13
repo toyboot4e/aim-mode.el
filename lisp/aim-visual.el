@@ -89,6 +89,18 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
 
 (add-hook 'post-command-hook #'aim--visual-update)
 
+(defun aim--visual-deactivate ()
+  "Leave visual State when the region is deactivated, e.g. by \\`C-g'.
+Like Evil, any mark deactivation drops visual State and clears the
+highlight, so `keyboard-quit' no longer leaves a stale selection.
+Overlays are cleared here directly because `keyboard-quit' signals a
+quit, which can skip the `post-command-hook' refresh."
+  (when (eq aim-state 'visual)
+    (aim--visual-leave)
+    (aim--visual-update)))
+
+(add-hook 'deactivate-mark-hook #'aim--visual-deactivate)
+
 (defun aim--highlight-region (start end window rol)
   "Highlight the region from START to END in WINDOW, reusing overlay ROL.
 Installed buffer-locally as `redisplay-highlight-region-function'.
