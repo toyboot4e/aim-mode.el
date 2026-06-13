@@ -12,13 +12,13 @@ replace, motion.
 
 **Motions** — `h j k l`, `w b e W B E`, `0 ^ $ g_ |`, `+ - _`,
 `gj gk`, `f F t T ; ,`, `gg G`, `{ } ( )`, `%`, `H M L`, `C-d C-u`,
-`[[ ]] [] ][`, `/ ? n N *`, marks `` ` `` `'` `` `` `` with `m`.
+`[[ ]] [] ][`, `/ ? n N *`, marks `` ` ``, `'`, ``` `` ``` with `m`.
 
 **Operators** — `d c y`, `> <`, `= `, `gu gU g~`, `gq gw`, `!`. All
 compose with motions, counts, and text objects; doubled forms
 (`dd`, `guu`, `==`, `!!`) act linewise.
 
-**Text objects** — `iw aw iW aW`, `i( i[ i{ i< i" i' i\``  (and `a`
+**Text objects** — `iw aw iW aW`, `` i( i[ i{ i< i" i' i` `` (and `a`
 variants, with `b`/`B` aliases), `ip ap`, `is as`, `it at`.
 
 **Edits** — `x s S r ~ J gJ`, `D C Y`, `p P gp gP`, `o O i a A I gi`,
