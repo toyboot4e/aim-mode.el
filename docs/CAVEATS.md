@@ -59,17 +59,9 @@ keeping the objects small and dependency-free.
 `"adw` repeats as `dw`: the `"` prefix is a separate command whose
 register does not enter the repeat record. Fix scheduled for **0.14**.
 
-### Block change does not replicate insertion
+### `$A` ragged block append is not special-cased
 
-`c` on a block selection deletes the rectangle and inserts on the first
-line only; Vim replays the insertion on every line of the block when
-leaving insert. Paste over a block selection is also unsupported. Both
-fixed in **0.13** (with block `I`/`A` and the rectangle highlight).
-
-### Block selection highlights linearly
-
-Charwise and linewise visual selections are drawn by a dedicated
-overlay matching the true Vim range (inclusive / whole-line). Block
-(`C-v`) still shows the plain region — a linear span from the first
-corner to the last, not the rectangle that operators actually act on.
-Per-line rectangle highlight scheduled for **0.13**.
+Vim's `$` in a block selection makes `A` append at each line's own end
+(ragged right). aim-mode's block `A` always uses a fixed column,
+padding short lines with spaces. Everyday block `I`/`A`/`c` at a fixed
+column work; the `$`-extended ragged form is the gap.

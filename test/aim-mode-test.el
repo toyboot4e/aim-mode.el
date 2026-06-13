@@ -737,9 +737,9 @@
             :expect "ab|ab\ncdcd\n"))
 
 (ert-deftest aim-block-change ()
-  "Block change deletes the rectangle; insertion is on the first line."
+  "Block change deletes the rectangle and replicates the insertion."
   (aim-test :initial "|ab\ncd\n" :keys "C-v jcX ESC"
-            :expect "|Xb\nd\n"))
+            :expect "|Xb\nXd\n"))
 
 (ert-deftest aim-block-insert-replicates ()
   "Block I inserts the typed text at the left column of every line."
@@ -755,6 +755,20 @@
   "Block A pads a short line with spaces to reach the column."
   (aim-test :initial "|ab\nc\nab\n" :keys "C-v j j lAX ESC"
             :expect "ab|X\nc X\nabX\n"))
+
+(ert-deftest aim-block-change-replicates ()
+  "Block c deletes the rectangle and replicates the typed text."
+  (aim-test :initial "|abc\ndef\nghi\n" :keys "C-v j j lcXY ESC"
+            :expect "X|Yc\nXYf\nXYi\n"))
+
+(ert-deftest aim-block-paste-over-block ()
+  "Visual p over a block selection replaces it (no longer errors)."
+  (aim-test-with-buffer "|abc\ndef\n"
+    (aim-mode 1)
+    (aim-test-keys "C-v j y")           ; yank block col0 lines 1-2 = "a\nd"
+    (aim-test-keys "C-v j p")           ; replace the same block with it
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "abc\ndef\n"))))
 
 ;;;; Keybinding API
 

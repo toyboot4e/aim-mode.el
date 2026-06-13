@@ -20,6 +20,7 @@
 ;;; Code:
 
 (require 'aim-macros)
+(require 'rect)
 
 (defvar-local aim--visual-overlays nil
   "Overlays showing the true Vim selection while in visual State.
@@ -75,6 +76,15 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
 (defvar-local aim--block-insert-end nil
   "Marker tracking the end of the block-insert text while inserting.")
 
+(defun aim--begin-block-insert (col lines append)
+  "Begin a block insert at COL on the current line, replicating to LINES.
+LINES is a list of line numbers; APPEND pads short lines to COL."
+  (move-to-column col append)
+  (aim--start-undo-session)
+  (setq aim--block-insert (list (point-marker) col lines append)
+        aim--block-insert-end nil)
+  (aim-switch-state 'insert))
+
 (defun aim--block-insert (append)
   "Begin a block insert at the left column, or the right edge if APPEND."
   (let* ((m (mark)) (p (point))
@@ -86,12 +96,7 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
     (aim--visual-leave)
     (goto-char (point-min))
     (forward-line (1- l1))
-    (move-to-column col append)
-    (aim--start-undo-session)
-    (setq aim--block-insert (list (point-marker) col
-                                  (number-sequence (1+ l1) l2) append)
-          aim--block-insert-end nil)
-    (aim-switch-state 'insert)))
+    (aim--begin-block-insert col (number-sequence (1+ l1) l2) append)))
 
 (defun aim--block-insert-track ()
   "Track and finish a block insert; runs on `post-command-hook'."
@@ -193,28 +198,78 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
      (aim-switch-state 'visual))
     (_ (user-error "No previous selection"))))
 
+(defun aim--visual-kill-rectangle (beg end)
+  "Delete the BEG..END rectangle into the kill-ring, block-tagged."
+  (kill-new (propertize (mapconcat #'identity
+                                   (delete-extract-rectangle beg end) "\n")
+                        'aim-type 'block)))
+
 (defun aim-visual-paste (_count)
   "Replace the selection with a paste.
 The replaced text goes to the kill-ring, like Vim."
   (interactive "p")
-  (when (eq aim--visual-kind 'block)
-    (user-error "Paste over a block selection is not supported yet"))
-  (let* ((text (aim--paste-text))
-         (linewise (aim--text-linewise-p text))
-         (range (aim--visual-range)))
-    (aim--visual-leave)
-    (kill-region (car range) (cadr range))
-    (aim--kill-finish (if (eq (nth 2 range) 'linewise) 'line 'char))
-    (goto-char (car range))
-    (if linewise
-        (let ((pt (point)))
-          (unless (bolp) (insert "\n"))
-          (insert text)
-          (unless (string-suffix-p "\n" text) (insert "\n"))
-          (goto-char pt)
-          (back-to-indentation))
+  (let* ((range (aim--visual-range))
+         (text (aim--paste-text)))
+    (cond
+     ((eq (nth 2 range) 'block)
+      (aim--visual-leave)
+      (aim--visual-kill-rectangle (nth 0 range) (nth 1 range))
+      (goto-char (nth 0 range))
+      (if (eq (get-text-property 0 'aim-type text) 'block)
+          (insert-rectangle (split-string text "\n"))
+        (insert text)))
+     ((aim--text-linewise-p text)
+      (aim--visual-leave)
+      (kill-region (nth 0 range) (nth 1 range))
+      (aim--kill-finish (if (eq (nth 2 range) 'linewise) 'line 'char))
+      (goto-char (nth 0 range))
+      (let ((pt (point)))
+        (unless (bolp) (insert "\n"))
+        (insert text)
+        (unless (string-suffix-p "\n" text) (insert "\n"))
+        (goto-char pt)
+        (back-to-indentation)))
+     (t
+      (aim--visual-leave)
+      (kill-region (nth 0 range) (nth 1 range))
+      (aim--kill-finish (if (eq (nth 2 range) 'linewise) 'line 'char))
+      (goto-char (nth 0 range))
       (insert text)
-      (backward-char))))
+      (backward-char)))))
+
+(defun aim-visual-change ()
+  "Change the visual selection (Vim's visual c/s).
+A block selection deletes the rectangle and replicates the typed
+text down the block; char/line behave like the change operator."
+  (interactive)
+  (let ((range (aim--visual-range)))
+    (if (eq (nth 2 range) 'block)
+        (let* ((m (mark)) (p (point))
+               (c1 (save-excursion (goto-char m) (current-column)))
+               (c2 (save-excursion (goto-char p) (current-column)))
+               (left (min c1 c2))
+               (l1 (line-number-at-pos (min m p)))
+               (l2 (line-number-at-pos (max m p))))
+          (aim--visual-leave)
+          (aim--start-undo-session)
+          (aim--visual-kill-rectangle (nth 0 range) (nth 1 range))
+          (goto-char (point-min))
+          (forward-line (1- l1))
+          (aim--begin-block-insert left (number-sequence (1+ l1) l2) nil))
+      (let* ((linewise (eq (nth 2 range) 'linewise))
+             (indent (and linewise
+                          (save-excursion
+                            (goto-char (nth 0 range))
+                            (buffer-substring (point)
+                                              (progn (back-to-indentation)
+                                                     (point)))))))
+        (aim--visual-leave)
+        (aim--start-undo-session)
+        (kill-region (nth 0 range) (nth 1 range))
+        (aim--kill-finish (if linewise 'line 'char))
+        (goto-char (nth 0 range))
+        (when linewise (insert indent "\n") (backward-char))
+        (aim-switch-state 'insert)))))
 
 (defun aim-visual-object (count)
   "Select the text object read after this key (i/a in visual State).

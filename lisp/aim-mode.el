@@ -159,7 +159,8 @@
   "A" #'aim-visual-append
   "d" #'aim-delete
   "x" #'aim-delete
-  "c" #'aim-change
+  "c" #'aim-visual-change
+  "s" #'aim-visual-change
   "y" #'aim-yank
   ">" #'aim-shift-right
   "<" #'aim-shift-left
