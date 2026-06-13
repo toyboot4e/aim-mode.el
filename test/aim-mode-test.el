@@ -444,6 +444,24 @@
     (should-error (aim-test-keys ":definitely-not-a-command RET")
                   :type 'user-error)))
 
+;;;; Increment / decrement
+
+(ert-deftest aim-cmd-increment ()
+  (aim-test :initial "x |41 y" :keys "C-a" :expect "x 4|2 y"))
+
+(ert-deftest aim-cmd-increment-after-point ()
+  "C-a jumps forward to the next number on the line."
+  (aim-test :initial "|foo 9 bar" :keys "C-a" :expect "foo 1|0 bar"))
+
+(ert-deftest aim-cmd-increment-count ()
+  (aim-test :initial "|5" :keys "3 C-a" :expect "|8"))
+
+(ert-deftest aim-cmd-decrement ()
+  (aim-test :initial "|7" :keys "g C-x" :expect "|6"))
+
+(ert-deftest aim-cmd-increment-negative ()
+  (aim-test :initial "x |-1 y" :keys "C-a" :expect "x |0 y"))
+
 ;;;; Substitute, join, paste-advance, gi
 
 (ert-deftest aim-cmd-substitute-char ()

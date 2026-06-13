@@ -182,6 +182,34 @@ rectangle at the cursor column."
     (goto-char (line-end-position))
     (unless (eobp) (delete-char 1))))
 
+;;;; Increment / decrement
+
+(defun aim--add-to-number (delta)
+  "Add DELTA to the decimal number at or after point on this line.
+Leave point on the last digit of the result, like Vim."
+  (let ((eol (line-end-position)))
+    (unless (looking-at-p "[0-9]")
+      (skip-chars-forward "^0-9" eol))
+    (unless (looking-at-p "[0-9]")
+      (user-error "No number on the line"))
+    (skip-chars-backward "0-9")
+    (when (eq (char-before) ?-)
+      (backward-char))
+    (looking-at "-?[0-9]+")
+    (let ((new (number-to-string (+ (string-to-number (match-string 0)) delta))))
+      (replace-match new)
+      (goto-char (1- (point))))))
+
+(aim-define-command aim-increment (count)
+  "Increment the number at or after point by COUNT (Vim's C-a)."
+  :interactive "p"
+  (aim--add-to-number count))
+
+(aim-define-command aim-decrement (count)
+  "Decrement the number at or after point by COUNT (Vim's C-x)."
+  :interactive "p"
+  (aim--add-to-number (- count)))
+
 ;;;; Insert at last edit (gi)
 
 (defvar-local aim--last-insert-pos nil

@@ -121,6 +121,8 @@
   "S" #'aim-substitute-line
   "=" #'aim-reindent
   "!" #'aim-filter
+  "C-a" #'aim-increment
+  "g C-x" #'aim-decrement
   "R" #'aim-replace-state
   "m" #'aim-set-marker
   "/" #'aim-search-forward
