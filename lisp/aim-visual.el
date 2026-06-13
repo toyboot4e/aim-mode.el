@@ -63,6 +63,79 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
 
 (add-hook 'post-command-hook #'aim--visual-update)
 
+;;;; Block insert (I / A)
+;; The text typed on the first line is replicated at the same column on
+;; every other line of the block when insert State ends.  Start and end
+;; positions are tracked with this Leaf's own markers (no dependency on
+;; other Leaves).
+
+(defvar-local aim--block-insert nil
+  "Pending block insert as (START-MARKER COLUMN LINES APPEND), or nil.")
+
+(defvar-local aim--block-insert-end nil
+  "Marker tracking the end of the block-insert text while inserting.")
+
+(defun aim--block-insert (append)
+  "Begin a block insert at the left column, or the right edge if APPEND."
+  (let* ((m (mark)) (p (point))
+         (c1 (save-excursion (goto-char m) (current-column)))
+         (c2 (save-excursion (goto-char p) (current-column)))
+         (col (if append (1+ (max c1 c2)) (min c1 c2)))
+         (l1 (line-number-at-pos (min m p)))
+         (l2 (line-number-at-pos (max m p))))
+    (aim--visual-leave)
+    (goto-char (point-min))
+    (forward-line (1- l1))
+    (move-to-column col append)
+    (aim--start-undo-session)
+    (setq aim--block-insert (list (point-marker) col
+                                  (number-sequence (1+ l1) l2) append)
+          aim--block-insert-end nil)
+    (aim-switch-state 'insert)))
+
+(defun aim--block-insert-track ()
+  "Track and finish a block insert; runs on `post-command-hook'."
+  (when aim--block-insert
+    (if (eq aim-state 'insert)
+        (setq aim--block-insert-end (point-marker))
+      (pcase-let ((`(,start ,col ,lines ,append) aim--block-insert))
+        (setq aim--block-insert nil)
+        (let ((text (and (markerp aim--block-insert-end)
+                         (>= (marker-position aim--block-insert-end)
+                             (marker-position start))
+                         (buffer-substring start aim--block-insert-end))))
+          (when (and text (> (length text) 0) (not (string-search "\n" text)))
+            (save-excursion
+              (dolist (ln lines)
+                (goto-char (point-min))
+                (forward-line (1- ln))
+                (move-to-column col append)
+                (when (or append (>= (current-column) col))
+                  (insert text))))))
+        (set-marker start nil)))))
+
+(add-hook 'post-command-hook #'aim--block-insert-track)
+
+(defun aim-visual-insert ()
+  "Insert at the left of a block selection on every line (Vim's block I)."
+  (interactive)
+  (if (eq aim--visual-kind 'block)
+      (aim--block-insert nil)
+    (let ((beg (min (mark) (point))))
+      (aim--visual-leave)
+      (goto-char beg)
+      (aim-switch-state 'insert))))
+
+(defun aim-visual-append ()
+  "Append at the right of a block selection on every line (Vim's block A)."
+  (interactive)
+  (if (eq aim--visual-kind 'block)
+      (aim--block-insert t)
+    (let ((end (max (mark) (point))))
+      (aim--visual-leave)
+      (goto-char end)
+      (aim-switch-state 'insert))))
+
 (defun aim-visual-char ()
   "Start a charwise visual selection; toggle it off when active."
   (interactive)

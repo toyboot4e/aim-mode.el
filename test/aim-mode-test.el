@@ -741,6 +741,21 @@
   (aim-test :initial "|ab\ncd\n" :keys "C-v jcX ESC"
             :expect "|Xb\nd\n"))
 
+(ert-deftest aim-block-insert-replicates ()
+  "Block I inserts the typed text at the left column of every line."
+  (aim-test :initial "|abc\ndef\nghi\n" :keys "C-v j j IX ESC"
+            :expect "|Xabc\nXdef\nXghi\n"))
+
+(ert-deftest aim-block-append-replicates ()
+  "Block A appends the typed text after the right column of every line."
+  (aim-test :initial "|abc\ndef\nghi\n" :keys "C-v j j lAZ ESC"
+            :expect "ab|Zc\ndeZf\nghZi\n"))
+
+(ert-deftest aim-block-append-pads-short-line ()
+  "Block A pads a short line with spaces to reach the column."
+  (aim-test :initial "|ab\nc\nab\n" :keys "C-v j j lAX ESC"
+            :expect "ab|X\nc X\nabX\n"))
+
 ;;;; Keybinding API
 
 (ert-deftest aim-normal-state-does-not-self-insert ()

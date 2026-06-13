@@ -155,6 +155,8 @@
   "o" #'aim-visual-exchange
   "i" #'aim-visual-object
   "a" #'aim-visual-object
+  "I" #'aim-visual-insert
+  "A" #'aim-visual-append
   "d" #'aim-delete
   "x" #'aim-delete
   "c" #'aim-change
