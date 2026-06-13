@@ -18,14 +18,55 @@
   '(normal insert operator-pending visual replace motion)
   "All States aim-mode ships in 1.0.")
 
-(defconst aim--state-tags
-  '((normal . "N") (insert . "I") (operator-pending . "O")
-    (visual . "V") (replace . "R") (motion . "M"))
-  "Mode-line tag per State.")
-
 (defvar-local aim-state nil
   "The current State of this buffer, or nil when aim-mode is disabled.
 Also serves as the activation variable in `aim--emulation-alist'.")
+
+;;;; Mode-line indicator
+;; Faces inherit from semantic faces so themes restyle them for free.
+
+(defface aim-normal-state-face '((t :inherit success :weight bold))
+  "Mode-line face for normal State." :group 'aim)
+(defface aim-insert-state-face '((t :inherit error :weight bold))
+  "Mode-line face for insert State." :group 'aim)
+(defface aim-visual-state-face '((t :inherit warning :weight bold))
+  "Mode-line face for visual State." :group 'aim)
+(defface aim-operator-state-face '((t :inherit font-lock-builtin-face :weight bold))
+  "Mode-line face for operator-pending State." :group 'aim)
+(defface aim-replace-state-face '((t :inherit font-lock-constant-face :weight bold))
+  "Mode-line face for replace State." :group 'aim)
+(defface aim-motion-state-face '((t :inherit shadow :weight bold))
+  "Mode-line face for motion State." :group 'aim)
+
+(defconst aim--state-faces
+  '((normal . aim-normal-state-face)
+    (insert . aim-insert-state-face)
+    (operator-pending . aim-operator-state-face)
+    (visual . aim-visual-state-face)
+    (replace . aim-replace-state-face)
+    (motion . aim-motion-state-face))
+  "Mode-line face per State.")
+
+(defvar aim--visual-kind)              ; defined with the visual bookkeeping
+
+(defun aim--state-label ()
+  "Short upper-case label for the current State (visual shows its kind)."
+  (pcase aim-state
+    ('normal "NORMAL")
+    ('insert "INSERT")
+    ('operator-pending "O-PEND")
+    ('replace "REPLACE")
+    ('motion "MOTION")
+    ('visual (pcase aim--visual-kind
+               ('line "V-LINE") ('block "V-BLOCK") (_ "V-CHAR")))))
+
+(defun aim-mode-line-string ()
+  "Propertized State indicator for the mode line; empty when disabled.
+Use as the `aim-mode' lighter, or embed in a custom mode line."
+  (if aim-state
+      (propertize (concat " " (aim--state-label) " ")
+                  'face (alist-get aim-state aim--state-faces))
+    ""))
 
 ;;;; Keymaps
 

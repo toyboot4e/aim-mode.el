@@ -213,8 +213,7 @@
 ;;;###autoload
 (define-minor-mode aim-mode
   "Toggle aim-mode in the current buffer."
-  :lighter (:eval (format " aim[%s]"
-                          (or (alist-get aim-state aim--state-tags) "-")))
+  :lighter (:eval (aim-mode-line-string))
   (if aim-mode
       (aim-switch-state 'normal)
     (aim--disable)))

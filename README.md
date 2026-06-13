@@ -43,6 +43,18 @@ Emacs 30.1+. With a checkout on `load-path`:
 (aim-global-mode 1)          ; enable everywhere, or M-x aim-mode per buffer
 ```
 
+## State indicator
+
+The current State shows in the mode line with a per-State face
+(`NORMAL`, `INSERT`, `VISUAL`/`V-LINE`/`V-BLOCK`, `O-PEND`, `REPLACE`,
+`MOTION`), and the cursor shape changes per State (`aim-state-cursors`).
+The faces (`aim-normal-state-face` …) inherit from semantic faces, so
+themes restyle them. For a custom mode line, embed the segment yourself:
+
+```elisp
+(aim-mode-line-string)   ; → a propertized " NORMAL " etc.
+```
+
 ## Try it
 
 ```sh

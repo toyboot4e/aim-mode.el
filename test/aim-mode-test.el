@@ -810,6 +810,31 @@
           (should (equal (aim-test-buffer-state) "|abc"))))
     (remhash '(normal . text-mode) aim--aux-maps)))
 
+;;;; Mode-line indicator
+
+(ert-deftest aim-mode-line-empty-when-off ()
+  (with-temp-buffer
+    (should (equal (aim-mode-line-string) ""))))
+
+(ert-deftest aim-mode-line-normal ()
+  (aim-test-with-buffer "|x"
+    (aim-mode 1)
+    (let ((s (aim-mode-line-string)))
+      (should (string-match-p "NORMAL" s))
+      (should (eq (get-text-property 1 'face s) 'aim-normal-state-face)))))
+
+(ert-deftest aim-mode-line-insert ()
+  (aim-test-with-buffer "|x"
+    (aim-mode 1)
+    (aim-test-keys "i")
+    (should (string-match-p "INSERT" (aim-mode-line-string)))))
+
+(ert-deftest aim-mode-line-visual-block ()
+  (aim-test-with-buffer "|x"
+    (aim-mode 1)
+    (aim-test-keys "C-v")
+    (should (string-match-p "V-BLOCK" (aim-mode-line-string)))))
+
 ;;;; Insert-State chords
 
 (ert-deftest aim-insert-c-w-deletes-word ()
