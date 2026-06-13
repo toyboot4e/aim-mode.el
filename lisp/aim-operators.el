@@ -68,6 +68,9 @@ rectangle."
                (< (point) end))
     (goto-char beg)))
 
+;; Vim's `.' repeats the last change, not a yank.
+(put 'aim-yank 'aim-repeatable nil)
+
 ;;;; Case
 
 (defun aim--swap-case-string (text)

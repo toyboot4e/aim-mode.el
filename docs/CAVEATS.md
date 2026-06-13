@@ -54,11 +54,6 @@ keeping the objects small and dependency-free.
 
 ## Temporary
 
-### `.` ignores the register prefix
-
-`"adw` repeats as `dw`: the `"` prefix is a separate command whose
-register does not enter the repeat record. Fix scheduled for **0.14**.
-
 ### `$A` ragged block append is not special-cased
 
 Vim's `$` in a block selection makes `A` append at each line's own end

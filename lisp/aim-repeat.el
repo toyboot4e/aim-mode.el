@@ -40,6 +40,11 @@ collect a complete transcript for the repeat record.")
 (defvar aim--session-count nil
   "Count of the command that opened the insert session being recorded.")
 
+(defvar aim--repeat-prefix nil
+  "Key vector of a pending prefix (e.g. `\"a') to prepend to the next record.
+Set by commands marked with the `aim-repeat-prefix' property, like
+`aim-use-register', so `\"adw' repeats with its register.")
+
 (defun aim--read-char (&optional prompt)
   "Read a character like `read-char', adding it to the repeat transcript.
 PROMPT is passed to `read-char'."
@@ -56,8 +61,14 @@ PROMPT is passed to `read-char'."
    ;; `real-this-command' to the previous command's value, so recording
    ;; here would re-record that command with the digit as its keys.
    (prefix-arg nil)
+   ;; A prefix command (e.g. `"a') just set `aim--repeat-prefix'; leave
+   ;; it for the next repeatable command and record nothing.
+   ((and (symbolp real-this-command)
+         (get real-this-command 'aim-repeat-prefix))
+    nil)
    ((not aim-state)
-    (setq aim--session-keys nil))
+    (setq aim--session-keys nil
+          aim--repeat-prefix nil))
    ;; Accumulating an insert (or replace) session.
    (aim--session-keys
     (push (this-single-command-keys) aim--session-keys)
@@ -76,12 +87,16 @@ PROMPT is passed to `read-char'."
                         (this-single-command-keys))))
            (count (and current-prefix-arg
                        (prefix-numeric-value current-prefix-arg))))
+      (when (and keys aim--repeat-prefix)
+        (setq keys (vconcat aim--repeat-prefix keys)))
+      (setq aim--repeat-prefix nil)
       (when keys
         (if (memq aim-state '(insert replace))
             ;; The command opened an editing session; keep recording.
             (setq aim--session-keys (list keys)
                   aim--session-count count)
-          (setq aim--repeat-record (list :keys keys :count count)))))))
+          (setq aim--repeat-record (list :keys keys :count count))))))
+   (t (setq aim--repeat-prefix nil)))
   (setq aim--pending-keys nil))
 
 (add-hook 'post-command-hook #'aim--repeat-post-command)
@@ -98,7 +113,9 @@ PROMPT is passed to `read-char'."
                 (plist-get record :count)))
            (aim--repeating t))
       (execute-kbd-macro
-       (if n (vconcat (number-to-string n) keys) keys)))))
+       (if n (vconcat (number-to-string n) keys) keys))
+      ;; A replayed prefix (e.g. `"a') may have set this; don't leak it.
+      (setq aim--repeat-prefix nil))))
 
 (provide 'aim-repeat)
 ;;; aim-repeat.el ends here

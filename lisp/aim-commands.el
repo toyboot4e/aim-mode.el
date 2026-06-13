@@ -149,7 +149,14 @@ rectangle at the cursor column."
 (defun aim-use-register ()
   "Select the register for the next kill or paste (Vim's \" prefix)."
   (interactive)
-  (setq aim--pending-register (aim--read-char "\"-")))
+  (let ((reg (aim--read-char "\"-")))
+    (setq aim--pending-register reg
+          ;; Carry "<reg> into the next repeat record so `"adw' repeats
+          ;; with its register (the property keeps the post-command hook
+          ;; from clearing this).
+          aim--repeat-prefix (vconcat [?\"] (vector reg)))))
+
+(put 'aim-use-register 'aim-repeat-prefix t)
 
 ;;;; Substitute and join
 

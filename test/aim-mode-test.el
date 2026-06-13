@@ -856,6 +856,19 @@
 ;; keyboard macro while one is executing, and the test harness drives
 ;; everything through execute-kbd-macro.  Execution is testable.
 
+(ert-deftest aim-register-prefix-repeats ()
+  "`.' after \"adw replays the register prefix too (deletes into a)."
+  (aim-test-with-buffer "|foo bar baz"
+    (aim-mode 1)
+    (aim-test-keys "\"adw")             ; reg a = "foo "
+    (aim-test-keys ".")                 ; repeat: reg a = "bar "
+    (should (string= (substring-no-properties (get-register ?a)) "bar "))
+    (should (equal (buffer-string) "baz"))))
+
+(ert-deftest aim-yank-does-not-repeat ()
+  "`.' repeats the last change, not a yank (Vim behavior)."
+  (aim-test :initial "|aa bb cc" :keys "dwyw." :expect "|cc"))
+
 (ert-deftest aim-macro-execute-from-register ()
   (aim-test-with-buffer "|abcd"
     (aim-mode 1)
