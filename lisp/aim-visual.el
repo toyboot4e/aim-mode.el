@@ -129,11 +129,32 @@ EOL non-nil means each line's own end (ragged `$A'), ignoring COLUMN.")
 (defvar-local aim--block-insert-end nil
   "Marker tracking the end of the block-insert text while inserting.")
 
+(defvar-local aim--block-insert-undo nil
+  "Change-group handle spanning a whole block insert, or nil.
+It wraps the first line's edit and its replication onto the other lines
+so the two amalgamate into a single undo/redo step.  The insert-State
+session (`aim--undo-handle') nests inside it and closes first, on ESC;
+this outer group closes later, once `aim--block-insert-track' has
+replicated the text.")
+
+(defun aim--block-insert-open-undo ()
+  "Open the block-insert change group unless one is already open."
+  (unless aim--block-insert-undo
+    (setq aim--block-insert-undo (prepare-change-group))
+    (activate-change-group aim--block-insert-undo)))
+
+(defun aim--block-insert-close-undo ()
+  "Amalgamate and close the block-insert change group, if any."
+  (when aim--block-insert-undo
+    (undo-amalgamate-change-group aim--block-insert-undo)
+    (accept-change-group aim--block-insert-undo)
+    (setq aim--block-insert-undo nil)))
+
 (defun aim--begin-block-insert (col lines append eol)
   "Begin a block insert on the current line, replicating to LINES.
 At COL (padding short lines if APPEND), or at each line's end if EOL."
+  (aim--block-insert-open-undo)
   (if eol (goto-char (line-end-position)) (move-to-column col append))
-  (aim--start-undo-session)
   (setq aim--block-insert (list (point-marker) col lines append eol)
         aim--block-insert-end nil)
   (aim-switch-state 'insert))
@@ -174,7 +195,9 @@ With APPEND and a `$'-extended block, append at each line's own end."
                   (move-to-column col append)
                   (when (or append (>= (current-column) col))
                     (insert text)))))))
-        (set-marker start nil)))))
+        (set-marker start nil)
+        ;; Fold the replication into the first line's edit: one undo step.
+        (aim--block-insert-close-undo)))))
 
 (add-hook 'post-command-hook #'aim--block-insert-track)
 
@@ -333,7 +356,9 @@ text down the block; char/line behave like the change operator."
                (l1 (line-number-at-pos (min m p)))
                (l2 (line-number-at-pos (max m p))))
           (aim--visual-leave)
-          (aim--start-undo-session)
+          ;; Open the block-insert group up front so the rectangle delete,
+          ;; the first line's edit and the replication are one undo step.
+          (aim--block-insert-open-undo)
           (aim--visual-kill-rectangle (nth 0 range) (nth 1 range))
           (goto-char (point-min))
           (forward-line (1- l1))

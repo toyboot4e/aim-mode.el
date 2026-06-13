@@ -793,6 +793,31 @@ so `rectangle-mark-mode' steps aside and aim draws one overlay per line."
   (aim-test :initial "|abc\ndef\nghi\n" :keys "C-v j j lcXY ESC"
             :expect "X|Yc\nXYf\nXYi\n"))
 
+(ert-deftest aim-block-insert-undo-redo-is-one-step ()
+  "A block insert and its replication undo and redo as a single step."
+  (aim-test-with-buffer "|abc\ndef\nghi\n"
+    (aim-mode 1)
+    (aim-test-keys "C-v j j IX ESC")
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "Xabc\nXdef\nXghi\n"))
+    (aim-test-keys "u")                 ; one undo reverts the whole gesture
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "abc\ndef\nghi\n"))
+    (aim-test-keys "C-r")               ; one redo restores it
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "Xabc\nXdef\nXghi\n"))))
+
+(ert-deftest aim-block-change-undo-is-one-step ()
+  "A block change (rectangle delete + replicated insert) is one undo step."
+  (aim-test-with-buffer "|abc\ndef\nghi\n"
+    (aim-mode 1)
+    (aim-test-keys "C-v j j lcXY ESC")
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "XYc\nXYf\nXYi\n"))
+    (aim-test-keys "u")
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "abc\ndef\nghi\n"))))
+
 (ert-deftest aim-block-paste-over-block ()
   "Visual p over a block selection replaces it (no longer errors)."
   (aim-test-with-buffer "|abc\ndef\n"
