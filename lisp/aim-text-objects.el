@@ -234,5 +234,73 @@ there are none following).  Returns exact line boundaries."
   :type linewise
   (aim--paragraph-range t))
 
+;;;; Sentences
+
+;; Vim ends a sentence on a single space after .!?; Emacs's default
+;; wants two, so bind `sentence-end-double-space' off.
+
+(aim-define-text-object aim-outer-sentence (_count)
+  "A sentence with its trailing whitespace (Vim's as)."
+  (let ((sentence-end-double-space nil))
+    (cons (save-excursion (forward-sentence) (backward-sentence) (point))
+          (save-excursion (forward-sentence) (point)))))
+
+(aim-define-text-object aim-inner-sentence (_count)
+  "A sentence without trailing whitespace (Vim's is)."
+  (let ((sentence-end-double-space nil))
+    (cons (save-excursion (forward-sentence) (backward-sentence) (point))
+          (save-excursion (forward-sentence)
+                          (skip-chars-backward " \t\n")
+                          (point)))))
+
+;;;; Tags
+;; Char-based nested matching of <tag>...</tag>, like Vim (no real
+;; parser; see docs/CAVEATS.md).  Self-closing <.../> tags are ignored.
+
+(defconst aim--tag-re
+  "<\\(/?\\)\\([a-zA-Z][-a-zA-Z0-9]*\\)\\([^>]*\\)>"
+  "Match an open or close tag: group 1 is `/' for a close tag, 2 the name.")
+
+(defun aim--tag-pairs ()
+  "Return matched (OPEN-BEG OPEN-END CLOSE-BEG CLOSE-END) tag pairs.
+Well-formed nesting only; mismatched tags are skipped."
+  (let (pairs stack)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward aim--tag-re nil t)
+        (let ((closep (string= (match-string 1) "/"))
+              (name (match-string 2))
+              (self (string-suffix-p "/" (match-string 3)))
+              (beg (match-beginning 0))
+              (end (match-end 0)))
+          (cond
+           (self nil)
+           ((not closep) (push (list name beg end) stack))
+           ((and stack (string= (caar stack) name))
+            (let ((open (pop stack)))
+              (push (list (nth 1 open) (nth 2 open) beg end) pairs)))))))
+    pairs))
+
+(defun aim--tag-range (around)
+  "Range of the innermost tag pair containing point.
+AROUND includes the tags; otherwise just their contents."
+  (let ((pt (point)) best)
+    (dolist (p (aim--tag-pairs))
+      (when (and (<= (nth 0 p) pt) (< pt (nth 3 p))
+                 (or (null best) (> (nth 0 p) (nth 0 best))))
+        (setq best p)))
+    (unless best (user-error "No surrounding tag"))
+    (if around
+        (cons (nth 0 best) (nth 3 best))
+      (cons (nth 1 best) (nth 2 best)))))
+
+(aim-define-text-object aim-outer-tag (_count)
+  "The tag pair around point, tags included (Vim's at)."
+  (aim--tag-range t))
+
+(aim-define-text-object aim-inner-tag (_count)
+  "Inside the tag pair around point (Vim's it)."
+  (aim--tag-range nil))
+
 (provide 'aim-text-objects)
 ;;; aim-text-objects.el ends here

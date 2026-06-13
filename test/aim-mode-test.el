@@ -530,6 +530,25 @@
   "gi re-enters insert where insert was last left."
   (aim-test :initial "|abc" :keys "A Z ESC g g g i Y ESC" :expect "abcZ|Y"))
 
+;;;; Tag and sentence objects
+
+(ert-deftest aim-obj-inner-tag ()
+  (aim-test :initial "<p>he|llo</p>" :keys "dit" :expect "<p>|</p>"))
+
+(ert-deftest aim-obj-outer-tag ()
+  (aim-test :initial "x<p>he|llo</p>y" :keys "dat" :expect "x|y"))
+
+(ert-deftest aim-obj-inner-tag-nested ()
+  "it selects the innermost enclosing tag."
+  (aim-test :initial "<a><b>x|y</b></a>" :keys "dit" :expect "<a><b>|</b></a>"))
+
+(ert-deftest aim-obj-change-inner-tag ()
+  (aim-test :initial "<p>o|ld</p>" :keys "citnew ESC" :expect "<p>ne|w</p>"))
+
+(ert-deftest aim-obj-inner-sentence ()
+  (aim-test :initial "One. Tw|o here. Three." :keys "dis"
+            :expect "One. | Three."))
+
 ;;;; Simple commands
 
 (ert-deftest aim-cmd-delete-char ()
