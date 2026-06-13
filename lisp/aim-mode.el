@@ -157,6 +157,7 @@
   "a" #'aim-visual-object
   "I" #'aim-visual-insert
   "A" #'aim-visual-append
+  "$" #'aim-visual-end-of-line
   "d" #'aim-delete
   "x" #'aim-delete
   "c" #'aim-visual-change

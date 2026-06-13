@@ -756,6 +756,11 @@
   (aim-test :initial "|ab\nc\nab\n" :keys "C-v j j lAX ESC"
             :expect "ab|X\nc X\nabX\n"))
 
+(ert-deftest aim-block-append-eol-ragged ()
+  "$A appends at each line's own end (ragged), not a fixed column."
+  (aim-test :initial "|ab\nc\nde\n" :keys "C-v j j $AX ESC"
+            :expect "ab|X\ncX\ndeX\n"))
+
 (ert-deftest aim-block-change-replicates ()
   "Block c deletes the rectangle and replicates the typed text."
   (aim-test :initial "|abc\ndef\nghi\n" :keys "C-v j j lcXY ESC"

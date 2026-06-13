@@ -53,6 +53,5 @@ These are by design (see CAVEATS.md for the full rationale):
 - Changelist `g;`/`g,`.
 - Vim-style insert-State chords — insert State is plain Emacs, whose
   built-ins (`C-w`, `C-y`, `M-DEL`, …) are the equivalents.
-- `$A` ragged block append (fixed-column block edits are covered).
 - The ex *language* beyond the dispatcher whitelist (`:g`, `:normal`,
   marks-in-ranges, …) — use the `:(sexp)` escape hatch or M-x.

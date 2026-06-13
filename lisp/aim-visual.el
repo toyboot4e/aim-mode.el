@@ -26,6 +26,9 @@
   "Overlays showing the true Vim selection while in visual State.
 A list: one overlay for char/line, one per line for block.")
 
+(defvar-local aim--visual-block-to-eol nil
+  "Non-nil when `$' has made a block selection ragged to each line's end.")
+
 (defun aim--visual-make-overlay (beg end)
   "Add a `region'-faced overlay over BEG..END to the visual overlays."
   (let ((ov (make-overlay beg end)))
@@ -54,7 +57,9 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
            (dotimes (_ (1+ (- l2 l1)))
              (move-to-column left)
              (let ((s (point)))
-               (move-to-column right)
+               (if aim--visual-block-to-eol
+                   (goto-char (line-end-position))
+                 (move-to-column right))
                (when (> (point) s)
                  (aim--visual-make-overlay s (point))))
              (forward-line 1)))))
@@ -71,23 +76,26 @@ Runs on `post-command-hook' (a no-op in non-visual buffers)."
 ;; other Leaves).
 
 (defvar-local aim--block-insert nil
-  "Pending block insert as (START-MARKER COLUMN LINES APPEND), or nil.")
+  "Pending block insert as (START-MARKER COLUMN LINES APPEND EOL), or nil.
+EOL non-nil means each line's own end (ragged `$A'), ignoring COLUMN.")
 
 (defvar-local aim--block-insert-end nil
   "Marker tracking the end of the block-insert text while inserting.")
 
-(defun aim--begin-block-insert (col lines append)
-  "Begin a block insert at COL on the current line, replicating to LINES.
-LINES is a list of line numbers; APPEND pads short lines to COL."
-  (move-to-column col append)
+(defun aim--begin-block-insert (col lines append eol)
+  "Begin a block insert on the current line, replicating to LINES.
+At COL (padding short lines if APPEND), or at each line's end if EOL."
+  (if eol (goto-char (line-end-position)) (move-to-column col append))
   (aim--start-undo-session)
-  (setq aim--block-insert (list (point-marker) col lines append)
+  (setq aim--block-insert (list (point-marker) col lines append eol)
         aim--block-insert-end nil)
   (aim-switch-state 'insert))
 
 (defun aim--block-insert (append)
-  "Begin a block insert at the left column, or the right edge if APPEND."
+  "Begin a block insert at the left column, or the right edge if APPEND.
+With APPEND and a `$'-extended block, append at each line's own end."
   (let* ((m (mark)) (p (point))
+         (eol (and append aim--visual-block-to-eol))
          (c1 (save-excursion (goto-char m) (current-column)))
          (c2 (save-excursion (goto-char p) (current-column)))
          (col (if append (1+ (max c1 c2)) (min c1 c2)))
@@ -96,14 +104,14 @@ LINES is a list of line numbers; APPEND pads short lines to COL."
     (aim--visual-leave)
     (goto-char (point-min))
     (forward-line (1- l1))
-    (aim--begin-block-insert col (number-sequence (1+ l1) l2) append)))
+    (aim--begin-block-insert col (number-sequence (1+ l1) l2) append eol)))
 
 (defun aim--block-insert-track ()
   "Track and finish a block insert (a `post-command-hook' function)."
   (when aim--block-insert
     (if (eq aim-state 'insert)
         (setq aim--block-insert-end (point-marker))
-      (pcase-let ((`(,start ,col ,lines ,append) aim--block-insert))
+      (pcase-let ((`(,start ,col ,lines ,append ,eol) aim--block-insert))
         (setq aim--block-insert nil)
         (let ((text (and (markerp aim--block-insert-end)
                          (>= (marker-position aim--block-insert-end)
@@ -114,9 +122,11 @@ LINES is a list of line numbers; APPEND pads short lines to COL."
               (dolist (ln lines)
                 (goto-char (point-min))
                 (forward-line (1- ln))
-                (move-to-column col append)
-                (when (or append (>= (current-column) col))
-                  (insert text))))))
+                (if eol
+                    (progn (goto-char (line-end-position)) (insert text))
+                  (move-to-column col append)
+                  (when (or append (>= (current-column) col))
+                    (insert text)))))))
         (set-marker start nil)))))
 
 (add-hook 'post-command-hook #'aim--block-insert-track)
@@ -150,6 +160,7 @@ LINES is a list of line numbers; APPEND pads short lines to COL."
          (setq aim--visual-kind 'char))
         (t
          (setq aim--visual-kind 'char)
+         (setq aim--visual-block-to-eol nil)
          (set-mark (point))
          (aim-switch-state 'visual))))
 
@@ -162,6 +173,7 @@ LINES is a list of line numbers; APPEND pads short lines to COL."
          (setq aim--visual-kind 'line))
         (t
          (setq aim--visual-kind 'line)
+         (setq aim--visual-block-to-eol nil)
          (set-mark (point))
          (aim-switch-state 'visual))))
 
@@ -174,8 +186,16 @@ LINES is a list of line numbers; APPEND pads short lines to COL."
          (setq aim--visual-kind 'block))
         (t
          (setq aim--visual-kind 'block)
+         (setq aim--visual-block-to-eol nil)
          (set-mark (point))
          (aim-switch-state 'visual))))
+
+(defun aim-visual-end-of-line ()
+  "Move to end of line; in a block, make the right edge ragged (Vim's $)."
+  (interactive)
+  (when (eq aim--visual-kind 'block)
+    (setq aim--visual-block-to-eol t))
+  (goto-char (line-end-position)))
 
 (defun aim-visual-exit ()
   "Leave visual State."
@@ -255,7 +275,7 @@ text down the block; char/line behave like the change operator."
           (aim--visual-kill-rectangle (nth 0 range) (nth 1 range))
           (goto-char (point-min))
           (forward-line (1- l1))
-          (aim--begin-block-insert left (number-sequence (1+ l1) l2) nil))
+          (aim--begin-block-insert left (number-sequence (1+ l1) l2) nil nil))
       (let* ((linewise (eq (nth 2 range) 'linewise))
              (indent (and linewise
                           (save-excursion

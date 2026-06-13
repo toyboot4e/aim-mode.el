@@ -54,9 +54,5 @@ keeping the objects small and dependency-free.
 
 ## Temporary
 
-### `$A` ragged block append is not special-cased
-
-Vim's `$` in a block selection makes `A` append at each line's own end
-(ragged right). aim-mode's block `A` always uses a fixed column,
-padding short lines with spaces. Everyday block `I`/`A`/`c` at a fixed
-column work; the `$`-extended ragged form is the gap.
+None. Every divergence above is permanent (by design); the 1.0
+completeness run resolved the rest.
