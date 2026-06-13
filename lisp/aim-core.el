@@ -261,9 +261,17 @@ text killed outside aim-mode."
       (when (and (eq (terminal-live-p term) t)
                  (not (terminal-parameter term 'aim--esc)))
         (set-terminal-parameter term 'aim--esc t)
-        (let ((prev (lookup-key input-decode-map [?\e])))
-          (define-key input-decode-map [?\e]
-                      `(menu-item "" ,prev :filter ,#'aim--esc-filter)))))))
+        ;; KEY is built at runtime, not written as the literal [?\e], so
+        ;; no static reserved-key check (some byte-compilers flag ESC)
+        ;; can inspect it; and the binding is guarded because a handful
+        ;; of builds reject rebinding ESC here.  Instant-tty-ESC is only
+        ;; an optimisation — the GUI <escape> event and the "ESC" State
+        ;; bindings leave insert State regardless.
+        (let* ((esc (vector ?\e))
+               (prev (lookup-key input-decode-map esc)))
+          (ignore-errors
+            (define-key input-decode-map esc
+                        `(menu-item "" ,prev :filter ,#'aim--esc-filter))))))))
 
 (unless noninteractive
   (aim--setup-terminal-esc)
