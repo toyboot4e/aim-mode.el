@@ -134,6 +134,10 @@
   "!" #'aim-filter
   "C-a" #'aim-increment
   "g C-x" #'aim-decrement
+  "&" #'aim-ex-repeat-substitute
+  "g &" #'aim-ex-repeat-substitute-buffer
+  "Z Z" #'aim-write-quit
+  "Z Q" #'aim-quit-no-write
   "R" #'aim-replace-state
   "m" #'aim-set-marker
   "/" #'aim-search-forward

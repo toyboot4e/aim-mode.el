@@ -438,6 +438,15 @@
   "Unrecognized input naming a command runs it like M-x."
   (aim-test :initial "|x" :keys ":ignore RET" :expect "|x"))
 
+(ert-deftest aim-ex-repeat-substitute-amp ()
+  "& repeats the last :s on the current line."
+  (aim-test :initial "|aa\naa\n" :keys ":s/a/X/g RET j&" :expect "XX\n|XX\n"))
+
+(ert-deftest aim-ex-repeat-substitute-buffer ()
+  "g& repeats the last :s over the whole buffer."
+  (aim-test :initial "|aa\nba\n" :keys ":s/a/X/ RET ggg&"
+            :expect "XX\n|bX\n"))
+
 (ert-deftest aim-ex-unknown-command-errors ()
   (aim-test-with-buffer "|x"
     (aim-mode 1)

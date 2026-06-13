@@ -117,10 +117,14 @@ the current line."
     ("$" (line-number-at-pos (point-max)))
     (_ (string-to-number addr))))
 
+(defvar aim--ex-last-subst nil
+  "Last substitution as (PATTERN REPLACEMENT FLAGS), for `&' and `g&'.")
+
 (defun aim-ex--substitute (range pattern replacement flags)
   "Substitute PATTERN with REPLACEMENT over RANGE per FLAGS.
 The g flag replaces every occurrence instead of the first per line.
 PATTERN is an Emacs regexp; REPLACEMENT supports \\\\N backreferences."
+  (setq aim--ex-last-subst (list pattern replacement flags))
   (let ((global (string-match-p "g" flags))
         (end (copy-marker (cdr range)))
         (count 0)
@@ -158,6 +162,36 @@ FORCE discards unsaved changes."
   (if (cdr (window-list))
       (delete-window)
     (kill-current-buffer)))
+
+;;;; Commands
+
+(defun aim-ex-repeat-substitute (&optional whole)
+  "Repeat the last `:s' on the current line, or the WHOLE buffer.
+Reuses the previous flags (Vim's `&' and `g&')."
+  (interactive)
+  (pcase aim--ex-last-subst
+    (`(,pattern ,replacement ,flags)
+     (aim-ex--substitute
+      (if whole (cons (point-min) (point-max))
+        (cons (line-beginning-position) (line-beginning-position 2)))
+      pattern replacement flags))
+    (_ (user-error "No previous substitution"))))
+
+(defun aim-ex-repeat-substitute-buffer ()
+  "Repeat the last `:s' over the whole buffer, reusing flags (Vim's g&)."
+  (interactive)
+  (aim-ex-repeat-substitute t))
+
+(defun aim-write-quit ()
+  "Write the buffer and close it (Vim's ZZ)."
+  (interactive)
+  (save-buffer)
+  (aim-ex--quit nil))
+
+(defun aim-quit-no-write ()
+  "Close the buffer discarding changes (Vim's ZQ)."
+  (interactive)
+  (aim-ex--quit t))
 
 (provide 'aim-ex)
 ;;; aim-ex.el ends here
