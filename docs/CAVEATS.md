@@ -58,6 +58,14 @@ line only; Vim replays the insertion on every line of the block when
 leaving insert. Paste over a block selection is also unsupported.
 Planned for the 1.0 completeness pass.
 
+### Block selection highlights linearly
+
+Charwise and linewise visual selections are drawn by a dedicated
+overlay matching the true Vim range (inclusive / whole-line). Block
+(`C-v`) still shows the plain region — a linear span from the first
+corner to the last, not the rectangle that operators actually act on.
+A per-line rectangle highlight is its own task.
+
 ### Pair and quote objects are context-blind
 
 `i(`/`a"`-style objects scan characters directly: escaped characters

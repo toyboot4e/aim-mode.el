@@ -7,10 +7,40 @@
 ;; point — so region-based Emacs commands work on it for free.
 ;; Operators take the selection as their range (see
 ;; `aim--operator-range'); `i'/`a' select text objects.
+;;
+;; Emacs's region is exclusive at its larger end and char-granular,
+;; while Vim's visual selection is inclusive (charwise) or whole-line
+;; (linewise).  So the live highlight is drawn by a dedicated overlay
+;; over the true `aim--visual-range', recomputed after each command;
+;; the mark stays active underneath for region-command integration
+;; (the overlay is always a superset, so the two same-face highlights
+;; simply union).  Block selections keep the plain-region highlight for
+;; now (see docs/CAVEATS.md).
 
 ;;; Code:
 
 (require 'aim-macros)
+
+(defvar-local aim--visual-overlay nil
+  "Overlay showing the true Vim selection while in visual State.")
+
+(defun aim--visual-update ()
+  "Refresh the visual-selection overlay; remove it outside visual State.
+Runs on `post-command-hook' (a no-op in non-visual buffers)."
+  (if (and (eq aim-state 'visual)
+           (memq aim--visual-kind '(char line))
+           (mark t))
+      (pcase-let ((`(,beg ,end ,_type) (aim--visual-range)))
+        (if aim--visual-overlay
+            (move-overlay aim--visual-overlay beg end)
+          (setq aim--visual-overlay (make-overlay beg end))
+          (overlay-put aim--visual-overlay 'face 'region)
+          (overlay-put aim--visual-overlay 'priority 99)))
+    (when aim--visual-overlay
+      (delete-overlay aim--visual-overlay)
+      (setq aim--visual-overlay nil))))
+
+(add-hook 'post-command-hook #'aim--visual-update)
 
 (defun aim-visual-char ()
   "Start a charwise visual selection; toggle it off when active."
