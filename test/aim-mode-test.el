@@ -650,34 +650,41 @@
   (aim-test-with-buffer "|abcde"
     (aim-mode 1)
     (aim-test-keys "vll")               ; anchor a(1), point c(3)
-    (should aim--visual-overlay)
-    (should (= (overlay-start aim--visual-overlay) 1))
-    (should (= (overlay-end aim--visual-overlay) 4))))
+    (should (= (length aim--visual-overlays) 1))
+    (should (= (overlay-start (car aim--visual-overlays)) 1))
+    (should (= (overlay-end (car aim--visual-overlays)) 4))))
 
 (ert-deftest aim-visual-char-keeps-anchor-backward ()
   "Moving backward keeps the anchor character selected."
   (aim-test-with-buffer "ab|cde"        ; point c(3)
     (aim-mode 1)
     (aim-test-keys "vhh")               ; anchor c(3), point a(1)
-    (should (= (overlay-start aim--visual-overlay) 1))
+    (should (= (overlay-start (car aim--visual-overlays)) 1))
     ;; End past the anchor (pos 3) proves c is still highlighted.
-    (should (= (overlay-end aim--visual-overlay) 4))))
+    (should (= (overlay-end (car aim--visual-overlays)) 4))))
 
 (ert-deftest aim-visual-line-highlights-full-lines ()
   "Linewise highlight covers whole lines, unlike charwise."
   (aim-test-with-buffer "ab|c\ndef\n"   ; point c(3)
     (aim-mode 1)
     (aim-test-keys "V")
-    (should (= (overlay-start aim--visual-overlay) 1))   ; bol of line 1
-    (should (= (overlay-end aim--visual-overlay) 5))))   ; bol of line 2
+    (should (= (overlay-start (car aim--visual-overlays)) 1))   ; bol line 1
+    (should (= (overlay-end (car aim--visual-overlays)) 5))))   ; bol line 2
 
 (ert-deftest aim-visual-overlay-removed-on-exit ()
   (aim-test-with-buffer "|abc"
     (aim-mode 1)
     (aim-test-keys "vl")
-    (should aim--visual-overlay)
+    (should aim--visual-overlays)
     (aim-test-keys "ESC")
-    (should-not aim--visual-overlay)))
+    (should-not aim--visual-overlays)))
+
+(ert-deftest aim-visual-block-rectangle-highlight ()
+  "Block selection shows one overlay per spanned line."
+  (aim-test-with-buffer "|abc\ndef\nghi\n"
+    (aim-mode 1)
+    (aim-test-keys "C-v j j l")         ; 3 lines x 2 columns
+    (should (= (length aim--visual-overlays) 3))))
 
 (ert-deftest aim-visual-shift ()
   (aim-test :initial "|a\nb\nc\n" :keys "Vj>" :expect "    |a\n    b\nc\n"))

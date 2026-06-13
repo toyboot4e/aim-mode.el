@@ -21,24 +21,45 @@
 
 (require 'aim-macros)
 
-(defvar-local aim--visual-overlay nil
-  "Overlay showing the true Vim selection while in visual State.")
+(defvar-local aim--visual-overlays nil
+  "Overlays showing the true Vim selection while in visual State.
+A list: one overlay for char/line, one per line for block.")
+
+(defun aim--visual-make-overlay (beg end)
+  "Add a `region'-faced overlay over BEG..END to the visual overlays."
+  (let ((ov (make-overlay beg end)))
+    (overlay-put ov 'face 'region)
+    (overlay-put ov 'priority 99)
+    (push ov aim--visual-overlays)))
 
 (defun aim--visual-update ()
-  "Refresh the visual-selection overlay; remove it outside visual State.
+  "Refresh the visual-selection overlays; clear them outside visual State.
 Runs on `post-command-hook' (a no-op in non-visual buffers)."
-  (if (and (eq aim-state 'visual)
-           (memq aim--visual-kind '(char line))
-           (mark t))
-      (pcase-let ((`(,beg ,end ,_type) (aim--visual-range)))
-        (if aim--visual-overlay
-            (move-overlay aim--visual-overlay beg end)
-          (setq aim--visual-overlay (make-overlay beg end))
-          (overlay-put aim--visual-overlay 'face 'region)
-          (overlay-put aim--visual-overlay 'priority 99)))
-    (when aim--visual-overlay
-      (delete-overlay aim--visual-overlay)
-      (setq aim--visual-overlay nil))))
+  (mapc #'delete-overlay aim--visual-overlays)
+  (setq aim--visual-overlays nil)
+  (when (and (eq aim-state 'visual) (mark t))
+    (pcase aim--visual-kind
+      ('block
+       (let* ((m (mark)) (p (point))
+              (c1 (save-excursion (goto-char m) (current-column)))
+              (c2 (save-excursion (goto-char p) (current-column)))
+              (left (min c1 c2))
+              (right (1+ (max c1 c2)))
+              (l1 (line-number-at-pos (min m p)))
+              (l2 (line-number-at-pos (max m p))))
+         (save-excursion
+           (goto-char (point-min))
+           (forward-line (1- l1))
+           (dotimes (_ (1+ (- l2 l1)))
+             (move-to-column left)
+             (let ((s (point)))
+               (move-to-column right)
+               (when (> (point) s)
+                 (aim--visual-make-overlay s (point))))
+             (forward-line 1)))))
+      (_
+       (pcase-let ((`(,beg ,end ,_type) (aim--visual-range)))
+         (aim--visual-make-overlay beg end))))))
 
 (add-hook 'post-command-hook #'aim--visual-update)
 
