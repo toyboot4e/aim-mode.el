@@ -40,14 +40,14 @@ Done so far:
   an `input-decode-map` filter. Curated `aim-x-*.el` modules deferred
   until concrete per-mode preferences exist.
 
-## Toward 1.0 — exhaustive daily-driver parity
+## Toward 1.0 — exhaustive daily-driver parity (shipped)
 
 1.0 means feature-complete against everyday Vim usage (CONTEXT.md's
 Common Core), reached over several Milestones. Every feature below is a
 Leaf built on the public API (`aim-define-operator/motion/command/
-text-object` + `aim-define-key`) — never in `aim-core.el`, no Kernel
-additions except the one repeat fix in 0.14. Each Milestone self-tests
-and ships green.
+text-object` + `aim-define-key`) — never in `aim-core.el`; the only
+Kernel touches were the doubled-key generalization (0.10) and the
+repeat-prefix fix (0.14). Each Milestone self-tests and ships green.
 
 - **0.10 — operators**: case `gu` `gU` `g~` (+ doubled linewise forms,
   + visual `u` `U` `~`); `=` reindent (+ `==` + visual); `gq`/`gw`
@@ -75,10 +75,16 @@ and ships green.
   Actual MELPA submission is a manual step (needs the public repo and a
   recipe PR).
 
-Deferred past 1.0: changelist `g;`/`g,`; Vim-style insert-State chords
-(insert State stays plain Emacs, whose built-ins are the equivalents).
+## 1.0 — release (ready)
 
-## 1.0 — release
+0.10–0.15 have shipped and docs/CAVEATS.md holds only permanent
+(by-design) entries — no unresolved temporary caveats. The package is
+feature-complete against the Common Core and ready to tag 1.0.
+Remaining manual step: the MELPA recipe PR (needs the public repo).
 
-Tag once 0.10–0.15 have shipped and docs/CAVEATS.md holds only
-permanent (by-design) entries — no unresolved temporary caveats.
+## Post-1.0 ideas
+
+- Changelist `g;`/`g,`.
+- Vim-style insert-State chords (insert State stays plain Emacs today).
+- Optional syntax-aware / tree-sitter text objects as a Leaf.
+- Curated `aim-x-*.el` per-major-mode bindings.

@@ -4,7 +4,7 @@
 
 ;; Author: toyboot4e <toyboot4e@gmail.com>
 ;; Maintainer: toyboot4e <toyboot4e@gmail.com>
-;; Version: 0.15.0
+;; Version: 1.0.0
 ;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: emulations
 ;; URL: https://github.com/toyboot4e/aim-mode.el
@@ -232,15 +232,14 @@ This is the entry point used by `nix run'."
   (let ((buffer (get-buffer-create "*aim-playground*")))
     (with-current-buffer buffer
       (when (zerop (buffer-size))
-        (insert "aim-mode playground -- Milestone 0.11\n"
+        (insert "aim-mode playground -- 1.0\n"
                 "States: v V C-v visual, R replace, i insert; ESC leaves.\n"
-                "Registers: \"ayy \"ap; macros: qa...q @a @@.\n"
-                "Motions: h j k l w b e W B E 0 ^ $ gg G f F t T ; , { } ( ) %,\n"
-                "  g_ gj gk | + - _ [[ ]]; search / ? n N *; marks m `a 'a.\n"
+                "Motions: h j k l w b e W B E 0 ^ $ g_ | + - _ gj gk gg G\n"
+                "  f F t T ; , { } ( ) % H M L C-d C-u [[ ]]; / ? n N *; m `a 'a.\n"
                 "Operators: d c y > < = gu gU g~ gq gw ! (doubled: dd guu == !!).\n"
                 "Commands: x s S r ~ J gJ D C Y p P gp gP gi C-a g-C-x . u C-r.\n"
-                "Text objects: diw daw ciw di( da\" dip dap ...\n"
-                "Ex: :w :q :wq :e :3 :%s/// :(sexp); & g& ZZ ZQ.\n"))
+                "Text objects: iw aw i( a\" it at is as ip ...\n"
+                "Visual: v V C-v; block I A c p; o gv; Ex: :%s/// :(sexp) & ZZ.\n"))
       (text-mode)
       (aim-mode 1))
     (pop-to-buffer buffer)))
