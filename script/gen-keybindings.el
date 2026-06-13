@@ -48,7 +48,10 @@
             (string-join (nreverse rows) "\n")
             "\n")))
 
-(with-temp-file "docs/KEYBINDINGS.md"
+(defconst aim-gen--out (or (getenv "AIM_KEYBINDINGS_OUT") "docs/KEYBINDINGS.md")
+  "Where to write the reference; `just docs-check' points it at a temp file.")
+
+(with-temp-file aim-gen--out
   (insert "# Keybindings\n\n"
           "Generated from the State keymaps by `just docs` — do not edit "
           "by hand.\nCommand names are shown without the `aim-` prefix.\n\n")
@@ -59,5 +62,5 @@
   (insert (aim-gen--table "Insert State" aim-insert-state-map) "\n")
   (insert (aim-gen--table "Replace State" aim-replace-state-map)))
 
-(message "wrote docs/KEYBINDINGS.md")
+(message "wrote %s" aim-gen--out)
 ;;; gen-keybindings.el ends here

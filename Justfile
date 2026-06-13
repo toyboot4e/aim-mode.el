@@ -10,7 +10,7 @@ layers := "aim-core aim-repeat aim-macros aim-motions aim-text-objects aim-opera
 
 default: ci
 
-ci: compile lint test
+ci: compile lint test docs-check
 
 ci-nix:
     nix develop -c just ci
@@ -74,6 +74,18 @@ alias d := docs
 # Regenerate docs/KEYBINDINGS.md from the State keymaps.
 docs:
     "{{ emacs }}" -Q --batch -L lisp -l script/gen-keybindings.el
+
+# Fail if docs/KEYBINDINGS.md has drifted from the keymaps (part of `ci`).
+[script('bash', '-euo', 'pipefail')]
+docs-check:
+    out="$(mktemp)"
+    trap 'rm -f "$out"' EXIT
+    AIM_KEYBINDINGS_OUT="$out" "{{ emacs }}" -Q --batch -L lisp \
+        -l script/gen-keybindings.el
+    if ! diff -u docs/KEYBINDINGS.md "$out"; then
+        echo "docs/KEYBINDINGS.md is stale; run 'just docs' and commit." >&2
+        exit 1
+    fi
 
 [private]
 alias r := run
