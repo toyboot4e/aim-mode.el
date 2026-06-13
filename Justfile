@@ -12,6 +12,9 @@ default: ci
 
 ci: compile lint test
 
+ci-nix:
+    nix develop -c just ci
+
 # Staged byte-compilation with warnings as errors.
 [private]
 alias c := compile
