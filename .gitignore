@@ -1,4 +1,5 @@
 *.elc
 .stage/
+.direnv/
 result
 result-*

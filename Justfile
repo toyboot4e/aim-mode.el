@@ -48,6 +48,24 @@ lint:
     "{{ emacs }}" -Q --batch \
         --eval '(dolist (f (directory-files "lisp" t "\\.el$")) (checkdoc-file f))'
 
+# Format the tree (nixfmt under treefmt) via the flake formatter.
+[private]
+alias f := fmt
+fmt:
+    nix fmt
+
+# zizmor security audit of the GitHub Actions workflows (offline, no token).
+[private]
+alias a := audit
+audit:
+    zizmor --offline .github/workflows
+
+# Verify Actions are pinned to SHAs matching their tags (needs network;
+# `pinact run --update` bumps and re-pins).
+[private]
+pin-check:
+    pinact run --check
+
 # Regenerate docs/KEYBINDINGS.md from the State keymaps.
 [private]
 alias d := docs
