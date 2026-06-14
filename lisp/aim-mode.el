@@ -239,9 +239,10 @@ This is the entry point used by `nix run'."
     (with-current-buffer buffer
       (when (zerop (buffer-size))
         (insert "aim-mode playground -- 1.0\n"
-                "States: v V C-v visual, R replace, i insert; ESC leaves.\n"
+                "States: v V C-v visual, R replace, i insert; ESC/C-g leave.\n"
                 "Motions: h j k l w b e W B E 0 ^ $ g_ | + - _ gj gk gg G\n"
-                "  f F t T ; , { } ( ) % H M L C-d C-u [[ ]]; / ? n N *; m `a 'a.\n"
+                "  f F t T ; , { } ( ) % H M L C-d C-u C-f C-b [[ ]];"
+                " / ? n N *; m `a 'a.\n"
                 "Operators: d c y > < = gu gU g~ gq gw ! (doubled: dd guu == !!).\n"
                 "Commands: x s S r ~ J gJ D C Y p P gp gP gi C-a g-C-x . u C-r.\n"
                 "Text objects: iw aw i( a\" it at is as ip ...\n"
